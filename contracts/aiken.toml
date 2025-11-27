@@ -1,0 +1,10 @@
+name = "propfi/contracts"
+version = "0.0.0"
+licences = ["Apache-2.0"]
+description = "PropFi Smart Contracts"
+repository = { user = "propfi", project = "contracts", platform = "github" }
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v2.2.0"
+source = "github"

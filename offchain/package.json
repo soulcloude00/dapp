@@ -1,0 +1,25 @@
+{
+  "name": "propfi-offchain",
+  "version": "1.0.0",
+  "description": "PropFi Offchain SDK - Transaction builder and blockchain services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "deploy:info": "ts-node src/deploy.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["cardano", "propfi", "real-estate", "tokenization"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@meshsdk/core": "^1.9.0-beta.87"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

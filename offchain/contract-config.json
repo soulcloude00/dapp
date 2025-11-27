@@ -1,0 +1,13 @@
+{
+  "network": "preprod",
+  "networkId": 0,
+  "contracts": {
+    "fractionalizeScriptHash": "4e03e3aacbb838b267ee6dcccdaffebff835a3a8cf51d9870e5a6b2e",
+    "fractionalizeScriptAddress": "addr_test1_script_4e03e3aacbb838b267ee...",
+    "cip68MintingPolicyId": "7af62086280f10305eec66f17afff08526513d5b41549cb63bd1e4ca",
+    "marketplaceScriptHash": "a763ffb61095577404d7594b17475e8db0d3b3a2595fa82e93642225",
+    "marketplaceScriptAddress": "addr_test1_script_a763ffb61095577404d7..."
+  },
+  "generatedAt": "2025-11-26T11:25:06.122Z",
+  "note": "Script addresses need to be generated using MeshJS. Use the script hashes with resolveScriptAddress()."
+}
