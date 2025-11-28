@@ -24,6 +24,34 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            
+            <!-- Deep link intent filter for wallet callbacks -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Custom scheme for PropFi app -->
+                <data android:scheme="propfi" />
+            </intent-filter>
+            
+            <!-- web+cardano scheme for CIP-13 standard -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="web+cardano" />
+            </intent-filter>
+            
+            <!-- HTTPS deep link for universal links -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data 
+                    android:scheme="https"
+                    android:host="propfi.app"
+                    android:pathPrefix="/wallet" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -40,6 +68,34 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Allow querying for wallet apps by package name -->
+        <package android:name="art.nft_craze.gallery.prod" />  <!-- Vespr -->
+        <package android:name="io.eternl.app" />               <!-- Eternl -->
+        <package android:name="io.dcspark.flintwallet" />      <!-- Flint -->
+        <package android:name="is.begin.app" />                <!-- Begin -->
+        <package android:name="io.strica.wallet" />            <!-- Typhon -->
+        
+        <!-- Allow querying for wallet apps by scheme -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="vespr" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="eternl" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="flint" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="begin" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="typhoncip30" />
         </intent>
     </queries>
 </manifest>

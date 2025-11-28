@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:propfi/theme/app_theme.dart';
-import 'package:propfi/features/property_details/property_details_page.dart';
 
 class PropertyCard extends StatelessWidget {
   final String title;
@@ -9,6 +8,8 @@ class PropertyCard extends StatelessWidget {
   final double price;
   final double apy;
   final double fundedPercentage;
+  final double? fundsRaised; // Funds raised in ADA
+  final double? targetAmount; // Target amount in ADA
   final VoidCallback? onTap;
 
   const PropertyCard({
@@ -19,6 +20,8 @@ class PropertyCard extends StatelessWidget {
     required this.price,
     required this.apy,
     required this.fundedPercentage,
+    this.fundsRaised,
+    this.targetAmount,
     this.onTap,
   });
 
@@ -28,32 +31,51 @@ class PropertyCard extends StatelessWidget {
       decoration: AppTheme.glassDecoration,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap:
-            onTap ??
-            () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      PropertyDetailsPage(title: title, price: price, apy: apy),
-                ),
-              );
-            },
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Placeholder
+            // Property Image
             Container(
-              height: 180,
+              height: 140,
               width: double.infinity,
               color: Colors.grey[900],
-              child: Center(
-                child: Icon(
-                  Icons.apartment,
-                  size: 64,
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-              ),
+              child: imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 140,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: AppTheme.primaryColor,
+                            strokeWidth: 2,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.apartment,
+                            size: 64,
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Icon(
+                        Icons.apartment,
+                        size: 64,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -81,7 +103,7 @@ class PropertyCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -126,6 +148,51 @@ class PropertyCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // Show funds raised if available
+                  if (fundsRaised != null && fundsRaised! > 0) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppTheme.secondaryColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.trending_up,
+                                size: 16,
+                                color: AppTheme.secondaryColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${fundsRaised!.toStringAsFixed(0)} ₳ raised',
+                                style: TextStyle(
+                                  color: AppTheme.secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (targetAmount != null)
+                            Text(
+                              'of ${targetAmount!.toStringAsFixed(0)} ₳',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

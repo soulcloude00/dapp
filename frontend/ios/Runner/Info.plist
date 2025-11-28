@@ -45,5 +45,34 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Deep linking configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.propfi</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>propfi</string>
+				<string>web+cardano</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Universal Links configuration -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:propfi.app</string>
+	</array>
+	<!-- Allow querying for wallet apps -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>vespr</string>
+		<string>eternl</string>
+		<string>flint</string>
+		<string>begin</string>
+		<string>typhoncip30</string>
+	</array>
 </dict>
 </plist>

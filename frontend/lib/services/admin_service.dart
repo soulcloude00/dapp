@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'dart:js_util' as js_util;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Conditional imports for web platform JS interop
+import 'js_stub.dart' if (dart.library.html) 'js_web.dart' as js;
+import 'js_util_stub.dart' if (dart.library.html) 'js_util_web.dart' as js_util;
 
 /// Property listing model for admin-created properties
 class Property {
@@ -22,6 +25,12 @@ class Property {
   final String? txHash; // Transaction hash when listed on-chain
   final int? outputIndex; // UTxO output index
   final String? propertyIdOnChain; // CIP-68 property ID
+  
+  // Owner details for certificate
+  final String? ownerName;
+  final String? ownerEmail;
+  final String? ownerPhone;
+  final String? ownerPhotoUrl;
 
   Property({
     required this.id,
@@ -40,6 +49,10 @@ class Property {
     this.txHash,
     this.outputIndex,
     this.propertyIdOnChain,
+    this.ownerName,
+    this.ownerEmail,
+    this.ownerPhone,
+    this.ownerPhotoUrl,
   });
 
   int get fractionsAvailable => totalFractions - fractionsSold;
@@ -64,6 +77,10 @@ class Property {
         'txHash': txHash,
         'outputIndex': outputIndex,
         'propertyIdOnChain': propertyIdOnChain,
+        'ownerName': ownerName,
+        'ownerEmail': ownerEmail,
+        'ownerPhone': ownerPhone,
+        'ownerPhotoUrl': ownerPhotoUrl,
       };
 
   factory Property.fromJson(Map<String, dynamic> json) => Property(
@@ -85,6 +102,10 @@ class Property {
         txHash: json['txHash'],
         outputIndex: json['outputIndex'],
         propertyIdOnChain: json['propertyId'] ?? json['propertyIdOnChain'],
+        ownerName: json['ownerName'],
+        ownerEmail: json['ownerEmail'],
+        ownerPhone: json['ownerPhone'],
+        ownerPhotoUrl: json['ownerPhotoUrl'],
       );
 
   static double _parseDouble(dynamic value) {
@@ -120,6 +141,10 @@ class Property {
     String? txHash,
     int? outputIndex,
     String? propertyIdOnChain,
+    String? ownerName,
+    String? ownerEmail,
+    String? ownerPhone,
+    String? ownerPhotoUrl,
     bool clearOnChainData = false, // Set to true to explicitly clear on-chain fields
   }) =>
       Property(
@@ -139,6 +164,10 @@ class Property {
         txHash: clearOnChainData ? null : (txHash ?? this.txHash),
         outputIndex: clearOnChainData ? null : (outputIndex ?? this.outputIndex),
         propertyIdOnChain: clearOnChainData ? null : (propertyIdOnChain ?? this.propertyIdOnChain),
+        ownerName: ownerName ?? this.ownerName,
+        ownerEmail: ownerEmail ?? this.ownerEmail,
+        ownerPhone: ownerPhone ?? this.ownerPhone,
+        ownerPhotoUrl: ownerPhotoUrl ?? this.ownerPhotoUrl,
       );
 }
 
@@ -146,9 +175,11 @@ class Property {
 class AdminService extends ChangeNotifier {
   static const String _storageKey = 'propfi_properties';
   static const String _adminWalletKey = 'propfi_admin_wallet';
+  static const String _saleRecordsKey = 'propfi_sale_records';
 
   List<Property> _properties = [];
   List<Property> _onChainProperties = [];
+  Map<String, int> _saleRecords = {}; // propertyId -> fractionsSold
   String? _adminWalletAddress;
   bool _isLoading = false;
   String? _lastError;
@@ -184,7 +215,15 @@ class AdminService extends ChangeNotifier {
         _properties = decoded.map((e) => Property.fromJson(e)).toList();
       }
 
+      // Load sale records (persisted separately for on-chain properties)
+      final saleRecordsJson = prefs.getString(_saleRecordsKey);
+      if (saleRecordsJson != null) {
+        final Map<String, dynamic> decoded = jsonDecode(saleRecordsJson);
+        _saleRecords = decoded.map((k, v) => MapEntry(k, v as int));
+      }
+
       debugPrint('Loaded ${_properties.length} local properties');
+      debugPrint('Loaded ${_saleRecords.length} sale records');
 
       // Also fetch on-chain properties
       await refreshOnChainProperties();
@@ -197,17 +236,34 @@ class AdminService extends ChangeNotifier {
     }
   }
 
+  /// Save sale records to persistent storage
+  Future<void> _saveSaleRecords() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_saleRecordsKey, jsonEncode(_saleRecords));
+  }
+
+  /// Get fractions sold for a property (from sale records)
+  int getFractionsSold(String propertyId) {
+    return _saleRecords[propertyId] ?? 0;
+  }
+
   /// Refresh on-chain properties from blockchain
   Future<void> refreshOnChainProperties() async {
+    if (!kIsWeb) {
+      debugPrint('On-chain property fetching only available on web');
+      return;
+    }
+    
     try {
       debugPrint('Fetching on-chain properties...');
       
       // Call JavaScript bridge to fetch on-chain properties
-      final bridge = js_util.getProperty(js_util.globalThis, 'PropFiBridge');
-      if (bridge == null) {
+      final window = js.webWindow;
+      if (window == null || !js_util.hasProperty(window, 'PropFiBridge')) {
         debugPrint('PropFiBridge not available');
         return;
       }
+      final bridge = js_util.getProperty(window, 'PropFiBridge');
 
       // Check if the JSON version exists
       final hasJsonMethod = js_util.hasProperty(bridge, 'fetchOnChainPropertiesJson');
@@ -222,7 +278,18 @@ class AdminService extends ChangeNotifier {
         if (jsonString != null && jsonString.toString().isNotEmpty && jsonString.toString() != '[]') {
           final List<dynamic> propertiesList = json.decode(jsonString.toString());
           _onChainProperties = propertiesList.map((p) {
-            return Property.fromJson(Map<String, dynamic>.from(p));
+            final property = Property.fromJson(Map<String, dynamic>.from(p));
+            
+            // Apply persisted sale records
+            final savedSales = _saleRecords[property.id] ?? 
+                               _saleRecords[property.propertyIdOnChain] ?? 
+                               _saleRecords[property.txHash] ?? 0;
+            
+            if (savedSales > 0) {
+              debugPrint('Applying ${savedSales} saved sales to property ${property.name}');
+              return property.copyWith(fractionsSold: savedSales);
+            }
+            return property;
           }).toList();
           
           debugPrint('Fetched ${_onChainProperties.length} on-chain properties');
@@ -241,39 +308,6 @@ class AdminService extends ChangeNotifier {
       debugPrint('Stack trace: $stackTrace');
       _lastError = e.toString();
     }
-  }
-
-  /// Convert JS array to Dart list
-  List<dynamic> _jsArrayToList(dynamic jsArray) {
-    final length = js_util.getProperty(jsArray, 'length') as int? ?? 0;
-    final list = <dynamic>[];
-    for (var i = 0; i < length; i++) {
-      list.add(js_util.getProperty(jsArray, i));
-    }
-    return list;
-  }
-
-  /// Convert JS object to Dart map
-  Map<String, dynamic> _jsObjectToMap(dynamic jsObject) {
-    final map = <String, dynamic>{};
-    try {
-      // Get Object constructor
-      final objectConstructor = js_util.getProperty(js_util.globalThis, 'Object');
-      // Call Object.keys(jsObject)
-      final keysResult = js_util.callMethod(objectConstructor, 'keys', [jsObject]);
-      final length = js_util.getProperty(keysResult, 'length') as int? ?? 0;
-      
-      for (var i = 0; i < length; i++) {
-        final key = js_util.getProperty(keysResult, i);
-        if (key != null) {
-          final value = js_util.getProperty(jsObject, key);
-          map[key.toString()] = value;
-        }
-      }
-    } catch (e) {
-      debugPrint('Error converting JS object to map: $e');
-    }
-    return map;
   }
 
   /// Save properties to local storage
@@ -333,6 +367,12 @@ class AdminService extends ChangeNotifier {
 
   /// List a property ON-CHAIN (decentralized)
   Future<String?> listPropertyOnChain(String id) async {
+    if (!kIsWeb) {
+      _lastError = 'On-chain listing only available on web';
+      notifyListeners();
+      return null;
+    }
+    
     _isLoading = true;
     _lastError = null;
     notifyListeners();
@@ -343,13 +383,14 @@ class AdminService extends ChangeNotifier {
       debugPrint('Listing property on-chain: ${property.name}');
 
       // Call JavaScript bridge
-      final bridge = js_util.getProperty(js_util.globalThis, 'PropFiBridge');
-      if (bridge == null) {
+      final window = js.webWindow;
+      if (window == null || !js_util.hasProperty(window, 'PropFiBridge')) {
         throw Exception('PropFiBridge not available. Please refresh the page.');
       }
+      final bridge = js_util.getProperty(window, 'PropFiBridge');
 
       // Create property object for JS
-      final propertyData = js_util.jsify({
+      final propertyData = js.JsObject.jsify({
         'name': property.name,
         'description': property.description,
         'location': property.location,
@@ -400,6 +441,12 @@ class AdminService extends ChangeNotifier {
 
   /// Cancel/Delist a property from marketplace (on-chain)
   Future<String?> cancelPropertyListing(String txHash, int outputIndex) async {
+    if (!kIsWeb) {
+      _lastError = 'On-chain operations only available on web';
+      notifyListeners();
+      return null;
+    }
+    
     _isLoading = true;
     _lastError = null;
     notifyListeners();
@@ -407,10 +454,11 @@ class AdminService extends ChangeNotifier {
     try {
       debugPrint('Canceling property listing: $txHash#$outputIndex');
 
-      final bridge = js_util.getProperty(js_util.globalThis, 'PropFiBridge');
-      if (bridge == null) {
+      final window = js.webWindow;
+      if (window == null || !js_util.hasProperty(window, 'PropFiBridge')) {
         throw Exception('PropFiBridge not available');
       }
+      final bridge = js_util.getProperty(window, 'PropFiBridge');
 
       final promise = js_util.callMethod(bridge, 'cancelPropertyListing', [txHash, outputIndex]);
       final result = await js_util.promiseToFuture(promise);
@@ -480,8 +528,14 @@ class AdminService extends ChangeNotifier {
     }
   }
 
-  /// Record a sale of fractions
+  /// Record a sale of fractions (persists to storage)
   Future<void> recordSale(String propertyId, int fractionsBought) async {
+    debugPrint('Recording sale: $fractionsBought fractions for property $propertyId');
+    
+    // Update sale records (persisted)
+    _saleRecords[propertyId] = (_saleRecords[propertyId] ?? 0) + fractionsBought;
+    await _saveSaleRecords();
+    
     // Check local properties
     var index = _properties.indexWhere((p) => p.id == propertyId);
     if (index != -1) {
@@ -494,13 +548,19 @@ class AdminService extends ChangeNotifier {
       return;
     }
 
-    // Check on-chain properties (update local cache)
-    index = _onChainProperties.indexWhere((p) => p.id == propertyId || p.propertyIdOnChain == propertyId);
+    // Check on-chain properties (update local cache with persisted sale record)
+    index = _onChainProperties.indexWhere((p) => 
+      p.id == propertyId || 
+      p.propertyIdOnChain == propertyId ||
+      p.txHash == propertyId
+    );
     if (index != -1) {
       final property = _onChainProperties[index];
+      final totalSold = _saleRecords[propertyId] ?? fractionsBought;
       _onChainProperties[index] = property.copyWith(
-        fractionsSold: property.fractionsSold + fractionsBought,
+        fractionsSold: totalSold,
       );
+      debugPrint('Updated on-chain property ${property.name} with $totalSold fractions sold');
       notifyListeners();
     }
   }
