@@ -47,3 +47,30 @@ export {
   exportContractConfig,
   displayContractInfo,
 } from './deploy';
+
+// Hydra L2
+export {
+  HydraClient,
+  hydraClient,
+  PropertyTradingService,
+  HydraTransactionBuilder,
+} from './hydra';
+
+export type {
+  HydraHeadStatus,
+  HydraConfig,
+  HydraUTxO,
+  HydraHeadState,
+  HydraMessage,
+  TransactionResult,
+  PropertyFraction,
+  PropertyMetadata as HydraPropertyMetadata,
+  TradeOrder,
+  OrderBook,
+  OrderBookEntry,
+  TradingStats,
+  TradeParams,
+  TransferParams,
+  CommitParams,
+} from './hydra';
+

@@ -82,10 +82,113 @@ class _AuthLandingPageState extends State<AuthLandingPage> {
                 },
               ),
             ),
+            const Divider(color: Colors.grey),
+            ListTile(
+              leading: const Icon(Icons.qr_code_scanner, color: Colors.cyan),
+              title: const Text(
+                'Mobile Wallet (P2P)',
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: const Text(
+                'Connect via CIP-45 (Vespr, Eternl)',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _connectMobileWallet();
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _connectMobileWallet() async {
+    final walletService = context.read<WalletService>();
+    final qrData = await walletService.connectMobileWallet();
+
+    if (!mounted) return;
+
+    if (qrData != null) {
+      // Start waiting for connection in background
+      final connectionFuture = walletService.waitForMobileConnection();
+      bool dialogOpen = true;
+
+      // Show QR Code Dialog
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1A0B2E),
+          title: const Text(
+            'Scan to Connect',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.white,
+                child: Image.network(
+                  'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(qrData)}',
+                  width: 200,
+                  height: 200,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Scan with your mobile wallet (Vespr, Eternl) to connect.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ).then((_) => dialogOpen = false);
+
+      // Wait for connection to complete
+      final success = await connectionFuture;
+
+      if (!mounted) return;
+
+      if (success) {
+        // Close dialog if still open
+        if (dialogOpen) {
+          Navigator.of(context).pop();
+        }
+
+        // Navigate to Home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainLayout()),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to initialize Peer Connect'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _connectWallet(CardanoWallet wallet) async {
@@ -172,24 +275,26 @@ class _AuthLandingPageState extends State<AuthLandingPage> {
                         ),
                       ],
                     ),
-                    child: const Text(
-                      '🏰',
-                      style: TextStyle(fontSize: 48),
-                    ),
+                    child: const Text('🏰', style: TextStyle(fontSize: 48)),
                   ),
                   const SizedBox(height: 32),
 
                   ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFFD4AF37), Color(0xFFFFD700), Color(0xFFD4AF37)],
+                      colors: [
+                        Color(0xFFD4AF37),
+                        Color(0xFFFFD700),
+                        Color(0xFFD4AF37),
+                      ],
                     ).createShader(bounds),
                     child: Text(
                       'Welcome to\nCrestadel',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                      ),
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            height: 1.1,
+                          ),
                     ),
                   ),
                   const SizedBox(height: 8),

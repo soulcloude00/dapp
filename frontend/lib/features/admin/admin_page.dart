@@ -118,10 +118,7 @@ class _AdminPageState extends State<AdminPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -153,16 +150,25 @@ class _AdminPageState extends State<AdminPage> {
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Colors.green,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         '${walletService.walletAddress?.substring(0, 12)}...',
-                        style: const TextStyle(color: Colors.green, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -231,7 +237,10 @@ class _AdminPageState extends State<AdminPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6C63FF),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             )
           else
@@ -243,7 +252,9 @@ class _AdminPageState extends State<AdminPage> {
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -287,7 +298,11 @@ class _AdminPageState extends State<AdminPage> {
                     Switch(
                       value: _useConnectedWallet,
                       onChanged: (v) => setState(() => _useConnectedWallet = v),
-                      activeColor: const Color(0xFF6C63FF),
+                      thumbColor: MaterialStateProperty.resolveWith(
+                        (states) => states.contains(MaterialState.selected)
+                            ? const Color(0xFF6C63FF)
+                            : null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -453,7 +468,10 @@ class _AdminPageState extends State<AdminPage> {
                       )
                     : const Text(
                         'Add Property',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ),
@@ -570,14 +588,16 @@ class _AdminPageState extends State<AdminPage> {
           ],
         ),
         const SizedBox(height: 16),
-        ...adminService.properties.map((property) => _buildPropertyCard(property, adminService)),
+        ...adminService.properties.map(
+          (property) => _buildPropertyCard(property, adminService),
+        ),
       ],
     );
   }
 
   Widget _buildPropertyCard(Property property, AdminService adminService) {
     final bool isOnChain = property.isOnChain;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -588,8 +608,8 @@ class _AdminPageState extends State<AdminPage> {
           color: isOnChain
               ? Colors.blue.withValues(alpha: 0.3)
               : property.isListed
-                  ? Colors.green.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.1),
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -635,7 +655,10 @@ class _AdminPageState extends State<AdminPage> {
                         ),
                         if (isOnChain)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
@@ -647,33 +670,48 @@ class _AdminPageState extends State<AdminPage> {
                                 SizedBox(width: 4),
                                 Text(
                                   'ON-CHAIN',
-                                  style: TextStyle(color: Colors.blue, fontSize: 10),
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
                           )
                         else if (property.isListed)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
                               'LISTED',
-                              style: TextStyle(color: Colors.green, fontSize: 10),
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 10,
+                              ),
                             ),
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.orange.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
                               'DRAFT',
-                              style: TextStyle(color: Colors.orange, fontSize: 10),
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 10,
+                              ),
                             ),
                           ),
                       ],
@@ -696,7 +734,10 @@ class _AdminPageState extends State<AdminPage> {
                         const SizedBox(width: 16),
                         Text(
                           '${property.fractionsAvailable}/${property.totalFractions} fractions',
-                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -727,7 +768,9 @@ class _AdminPageState extends State<AdminPage> {
                   if (!isOnChain)
                     IconButton(
                       icon: Icon(
-                        property.isListed ? Icons.visibility_off : Icons.visibility,
+                        property.isListed
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: property.isListed ? Colors.orange : Colors.green,
                       ),
                       onPressed: () {
@@ -737,7 +780,9 @@ class _AdminPageState extends State<AdminPage> {
                           adminService.listProperty(property.id);
                         }
                       },
-                      tooltip: property.isListed ? 'Unlist' : 'List on Marketplace',
+                      tooltip: property.isListed
+                          ? 'Unlist'
+                          : 'List on Marketplace',
                     ),
                   if (!isOnChain)
                     IconButton(
@@ -753,7 +798,8 @@ class _AdminPageState extends State<AdminPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: Colors.orange),
-                      onPressed: () => _resetFailedListing(property, adminService),
+                      onPressed: () =>
+                          _resetFailedListing(property, adminService),
                       tooltip: 'Reset (TX Failed)',
                     ),
                   ],
@@ -766,9 +812,12 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Future<void> _listOnChain(Property property, AdminService adminService) async {
+  Future<void> _listOnChain(
+    Property property,
+    AdminService adminService,
+  ) async {
     final walletService = context.read<WalletService>();
-    
+
     if (!walletService.isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -809,14 +858,20 @@ class _AdminPageState extends State<AdminPage> {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('✓ Property metadata stored on Cardano', 
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                  Text(
+                    '✓ Property metadata stored on Cardano',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                   SizedBox(height: 4),
-                  Text('✓ Decentralized and immutable', 
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                  Text(
+                    '✓ Decentralized and immutable',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                   SizedBox(height: 4),
-                  Text('✓ Requires ~2 ADA for transaction', 
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                  Text(
+                    '✓ Requires ~2 ADA for transaction',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -829,9 +884,7 @@ class _AdminPageState extends State<AdminPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             child: const Text('List On-Chain'),
           ),
         ],
@@ -849,7 +902,10 @@ class _AdminPageState extends State<AdminPage> {
               SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: 16),
               Text('Listing property on-chain...'),
@@ -868,7 +924,9 @@ class _AdminPageState extends State<AdminPage> {
       if (txHash != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Property listed on-chain! TX: ${txHash.substring(0, 20)}...'),
+            content: Text(
+              'Property listed on-chain! TX: ${txHash.substring(0, 20)}...',
+            ),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'View',
@@ -880,7 +938,9 @@ class _AdminPageState extends State<AdminPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${adminService.lastError ?? "Unknown error"}'),
+            content: Text(
+              'Error: ${adminService.lastError ?? "Unknown error"}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -907,12 +967,18 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Future<void> _resetFailedListing(Property property, AdminService adminService) async {
+  Future<void> _resetFailedListing(
+    Property property,
+    AdminService adminService,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1F2E),
-        title: const Text('Reset Failed Listing?', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Reset Failed Listing?',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           'This will clear the transaction hash for "${property.name}" so you can try listing again.\n\nOnly use this if the transaction failed to confirm on the blockchain.',
           style: const TextStyle(color: Colors.grey),
@@ -933,6 +999,7 @@ class _AdminPageState extends State<AdminPage> {
 
     if (confirmed == true) {
       await adminService.resetOnChainStatus(property.id);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Property reset to draft. You can try listing again.'),
@@ -942,12 +1009,18 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
-  Future<void> _confirmDelete(Property property, AdminService adminService) async {
+  Future<void> _confirmDelete(
+    Property property,
+    AdminService adminService,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1F2E),
-        title: const Text('Delete Property?', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Delete Property?',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Text(
           'Are you sure you want to delete "${property.name}"?',
           style: const TextStyle(color: Colors.grey),
@@ -979,7 +1052,9 @@ class _AdminPageState extends State<AdminPage> {
     if (availableWallets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No Cardano wallets detected. Please install Nami, Eternl, or another wallet.'),
+          content: Text(
+            'No Cardano wallets detected. Please install Nami, Eternl, or another wallet.',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -1007,15 +1082,27 @@ class _AdminPageState extends State<AdminPage> {
               ),
             ),
             const SizedBox(height: 20),
-            ...availableWallets.map((wallet) => ListTile(
-                  leading: const Icon(Icons.account_balance_wallet, color: Color(0xFF6C63FF)),
-                  title: Text(wallet.displayName, style: const TextStyle(color: Colors.white)),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await walletService.connectWallet(wallet);
-                  },
-                )),
+            ...availableWallets.map(
+              (wallet) => ListTile(
+                leading: const Icon(
+                  Icons.account_balance_wallet,
+                  color: Color(0xFF6C63FF),
+                ),
+                title: Text(
+                  wallet.displayName,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await walletService.connectWallet(wallet);
+                },
+              ),
+            ),
           ],
         ),
       ),

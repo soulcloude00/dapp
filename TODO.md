@@ -71,7 +71,29 @@ This document outlines the steps to recreate the **PropFi** project from scratch
 - [ ] **Run Application**
     - [ ] `cd frontend && flutter run -d chrome`
 
-## Phase 6: Midnight Integration (Optional/Advanced)
+## Phase 6: Hydra Layer 2 Integration ✅ COMPLETED
+- [x] **Setup Hydra Node in WSL**
+    - [x] Create `hydra-node-setup.sh` script
+    - [x] Download and configure Hydra node binary
+    - [x] Generate cryptographic keys
+- [x] **Configure Windows Integration**
+    - [x] Create `setup-hydra-port-forwarding.ps1` script
+    - [x] Setup port forwarding from Windows to WSL
+    - [x] Configure Windows Firewall rules
+- [x] **Implement Dart/Flutter Integration**
+    - [x] Update `HydraService` with full WebSocket support
+    - [x] Add transaction submission to L2
+    - [x] Integrate with `CertificateService`
+    - [x] Create `HydraStatusWidget` UI component
+- [x] **Create Documentation & Tools**
+    - [x] `HYDRA_SETUP.md` - Full setup guide
+    - [x] `HYDRA_CHECKLIST.md` - Quick checklist
+    - [x] `start-hydra.ps1` - One-click start script
+    - [x] `hydra-test.html` - Connection test page
+
+**Get Started**: See `HYDRA_CHECKLIST.md` or run `.\start-hydra.ps1`
+
+## Phase 7: Midnight Integration (Optional/Advanced)
 - [ ] **Setup Midnight**
     - [ ] Initialize `midnight/` directory.
     - [ ] Write `contracts/private_bid.ts` (Compact language).

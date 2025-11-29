@@ -7,6 +7,7 @@ import 'package:propfi/features/admin/admin_page.dart';
 import 'package:propfi/services/wallet_service.dart';
 import 'package:propfi/services/admin_service.dart';
 import 'package:propfi/services/certificate_service.dart';
+import 'package:propfi/services/hydra_trading_service.dart';
 
 class MarketplacePage extends StatefulWidget {
   const MarketplacePage({super.key});
@@ -90,7 +91,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
   }
 
   /// Filter and sort listings based on current criteria
-  List<MarketplaceListing> _getFilteredListings(List<MarketplaceListing> listings) {
+  List<MarketplaceListing> _getFilteredListings(
+    List<MarketplaceListing> listings,
+  ) {
     var filtered = listings.where((listing) {
       // Search filter
       if (_searchQuery.isNotEmpty) {
@@ -100,12 +103,12 @@ class _MarketplacePageState extends State<MarketplacePage> {
           return false;
         }
       }
-      
+
       // Price filter
       if (listing.price < _minPrice || listing.price > _maxPrice) {
         return false;
       }
-      
+
       return true;
     }).toList();
 
@@ -118,7 +121,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
         filtered.sort((a, b) => b.price.compareTo(a.price));
         break;
       case 'funded':
-        filtered.sort((a, b) => b.fundedPercentage.compareTo(a.fundedPercentage));
+        filtered.sort(
+          (a, b) => b.fundedPercentage.compareTo(a.fundedPercentage),
+        );
         break;
       case 'newest':
       default:
@@ -167,7 +172,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Price Range
               const Text(
                 'Price Range (ADA)',
@@ -193,12 +198,18 @@ class _MarketplacePageState extends State<MarketplacePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${_minPrice.toInt()} ₳', style: TextStyle(color: Colors.grey[400])),
-                  Text('${_maxPrice.toInt()} ₳', style: TextStyle(color: Colors.grey[400])),
+                  Text(
+                    '${_minPrice.toInt()} ₳',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                  Text(
+                    '${_maxPrice.toInt()} ₳',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Sort By
               const Text(
                 'Sort By',
@@ -215,7 +226,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Apply Button
               SizedBox(
                 width: double.infinity,
@@ -249,18 +260,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
         }
       },
       selectedColor: Colors.amber,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.black : Colors.white,
-      ),
+      labelStyle: TextStyle(color: isSelected ? Colors.black : Colors.white),
       backgroundColor: Colors.grey[800],
     );
   }
 
   bool _hasActiveFilters() {
-    return _searchQuery.isNotEmpty || 
-           _minPrice > 0 || 
-           _maxPrice < 100000 || 
-           _sortBy != 'newest';
+    return _searchQuery.isNotEmpty ||
+        _minPrice > 0 ||
+        _maxPrice < 100000 ||
+        _sortBy != 'newest';
   }
 
   Future<void> _showConnectWalletDialog() async {
@@ -391,7 +400,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          title: Text('Buy Fractions', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Buy Fractions',
+            style: TextStyle(color: Colors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,11 +668,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<WalletService, AdminService>(
-      builder: (context, walletService, adminService, child) {
+    return Consumer3<WalletService, AdminService, HydraTradingService>(
+      builder: (context, walletService, adminService, hydraService, child) {
         // Get filtered listings
         final filteredListings = _getFilteredListings(walletService.listings);
-        
+
         return Scaffold(
           appBar: AppBar(
             title: const Text('Marketplace'),
@@ -680,7 +692,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
             children: [
               // Header with wallet connection
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -696,10 +711,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   ],
                 ),
               ),
-              
+
               // Search & Filter Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -715,10 +733,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
                           decoration: InputDecoration(
                             hintText: 'Search properties...',
                             hintStyle: TextStyle(color: Colors.grey[500]),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey[500],
+                            ),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear, color: Colors.grey),
+                                    icon: const Icon(
+                                      Icons.clear,
+                                      color: Colors.grey,
+                                    ),
                                     onPressed: () {
                                       setState(() {
                                         _searchController.clear();
@@ -728,7 +752,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
                                   )
                                 : null,
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -742,18 +768,20 @@ class _MarketplacePageState extends State<MarketplacePage> {
                     Container(
                       height: 44,
                       decoration: BoxDecoration(
-                        color: _hasActiveFilters() 
-                            ? Colors.amber.withValues(alpha: 0.2) 
+                        color: _hasActiveFilters()
+                            ? Colors.amber.withValues(alpha: 0.2)
                             : Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: _hasActiveFilters() 
-                            ? Border.all(color: Colors.amber) 
+                        border: _hasActiveFilters()
+                            ? Border.all(color: Colors.amber)
                             : null,
                       ),
                       child: IconButton(
                         icon: Icon(
                           Icons.tune,
-                          color: _hasActiveFilters() ? Colors.amber : Colors.grey[400],
+                          color: _hasActiveFilters()
+                              ? Colors.amber
+                              : Colors.grey[400],
                         ),
                         onPressed: _showFilterDialog,
                       ),
@@ -761,7 +789,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   ],
                 ),
               ),
-              
+
               // Active filters indicator
               if (_hasActiveFilters())
                 Padding(
@@ -783,7 +811,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
                             _sortBy = 'newest';
                           });
                         },
-                        child: const Text('Clear All', style: TextStyle(fontSize: 12)),
+                        child: const Text(
+                          'Clear All',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ],
                   ),
@@ -804,6 +835,14 @@ class _MarketplacePageState extends State<MarketplacePage> {
                               'Error loading listings',
                               style: TextStyle(color: Colors.red[300]),
                             ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: _loadListings,
@@ -812,102 +851,68 @@ class _MarketplacePageState extends State<MarketplacePage> {
                           ],
                         ),
                       )
-                    : RefreshIndicator(
-                        onRefresh: _loadListings,
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                    : filteredListings.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Featured Section (only show if not filtering)
-                            if (!_hasActiveFilters() && filteredListings.isNotEmpty) ...[
-                              Text(
-                                'Featured Properties',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              PropertyCard(
-                                title: filteredListings.first.propertyName,
-                                location: filteredListings.first.location,
-                                imageUrl: filteredListings.first.imageUrl,
-                                price: filteredListings.first.price,
-                                apy: 8.5,
-                                fundedPercentage: filteredListings.first.fundedPercentage,
-                                fundsRaised: filteredListings.first.fundsRaised,
-                                targetAmount: filteredListings.first.targetAmount,
-                                onTap: () => _showBuyDialog(filteredListings.first),
-                              ),
-
-                              const SizedBox(height: 24),
-                            ],
-
-                            // All Listings
-                            Text(
-                              _hasActiveFilters() ? 'Search Results' : 'All Listings',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey[700],
                             ),
                             const SizedBox(height: 16),
-
-                            if (filteredListings.isEmpty)
-                              Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(32.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.home_work_outlined,
-                                        size: 64,
-                                        color: Colors.grey[600],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        _hasActiveFilters() 
-                                            ? 'No properties match your search'
-                                            : 'No listings available',
-                                        style: TextStyle(
-                                          color: Colors.grey[400],
-                                          fontSize: 18,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            else
-                              GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 1,
-                                      mainAxisSpacing: 16,
-                                      childAspectRatio: 1.1,
-                                    ),
-                                itemCount: filteredListings.length,
-                                itemBuilder: (context, index) {
-                                  final listing = filteredListings[index];
-                                  return PropertyCard(
-                                    title: listing.propertyName,
-                                    location: listing.location,
-                                    imageUrl: listing.imageUrl,
-                                    price: listing.price,
-                                    apy: 7.2 + index,
-                                    fundedPercentage: listing.fundedPercentage,
-                                    fundsRaised: listing.fundsRaised,
-                                    targetAmount: listing.targetAmount,
-                                    onTap: () => _showBuyDialog(listing),
-                                  );
-                                },
+                            Text(
+                              'No properties found',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 16,
                               ),
+                            ),
                           ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadListings,
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 1,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: 0.85,
+                              ),
+                          itemCount: filteredListings.length,
+                          itemBuilder: (context, index) {
+                            final listing = filteredListings[index];
+
+                            // Check if available in Hydra
+                            final hydraFraction = hydraService
+                                .getFractionForProperty(listing.id);
+
+                            return PropertyCard(
+                              title: listing.propertyName,
+                              location: listing.location,
+                              imageUrl: listing.imageUrl,
+                              price: listing.price,
+                              apy: 5.5, // Placeholder APY
+                              fundedPercentage: listing.fundedPercentage,
+                              fundsRaised: listing.fundsRaised,
+                              targetAmount: listing.price,
+                              hydraFraction: hydraFraction,
+                              onTap: () {
+                                if (hydraFraction != null) {
+                                  _showHydraTradeDialog(
+                                    hydraService,
+                                    hydraFraction,
+                                  );
+                                } else {
+                                  _showBuyDialog(listing);
+                                }
+                              },
+                            );
+                          },
                         ),
                       ),
               ),
@@ -915,6 +920,132 @@ class _MarketplacePageState extends State<MarketplacePage> {
           ),
         );
       },
+    );
+  }
+
+  // Helper to show Hydra Trade Dialog from Marketplace
+  Future<void> _showHydraTradeDialog(
+    HydraTradingService service,
+    HydraFraction fraction,
+  ) async {
+    final quantityController = TextEditingController(text: '1');
+    final priceController = TextEditingController(text: '10');
+    bool isBuilding = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.bolt, color: Colors.amber),
+              const SizedBox(width: 8),
+              const Text('Instant Buy (L2)'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Buy ${fraction.propertyId.substring(0, 8)}... instantly via Hydra Head.',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: quantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(
+                  labelText: 'Price (ADA)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              if (isBuilding) ...[
+                const SizedBox(height: 16),
+                const LinearProgressIndicator(),
+                const SizedBox(height: 8),
+                const Text(
+                  'Building L2 Transaction...',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isBuilding
+                  ? null
+                  : () async {
+                      final qty = int.tryParse(quantityController.text);
+                      final price = double.tryParse(priceController.text);
+
+                      if (qty != null && price != null) {
+                        setState(() => isBuilding = true);
+
+                        try {
+                          final toAddress = fraction.ownerAddress;
+
+                          final cbor = await service.buildTradeTx(
+                            toAddress: toAddress,
+                            lovelaceAmount: BigInt.from(price * 1000000),
+                            assetId: null, // Buying, so no asset sent
+                            assetAmount: null,
+                          );
+
+                          await service.submitTrade(
+                            propertyId: fraction.propertyId,
+                            policyId: fraction.policyId,
+                            assetName: fraction.assetName,
+                            seller: fraction.ownerAddress,
+                            buyer: 'Me',
+                            quantity: BigInt.from(qty),
+                            pricePerUnit: BigInt.from(price * 1000000),
+                            txCborHex: cbor,
+                          );
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('⚡ Instant Trade Submitted!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() => isBuilding = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Instant Buy'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

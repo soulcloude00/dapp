@@ -61,3 +61,21 @@ pub const usdm_asset_name: ByteArray = #"5553444d"  // "USDM" in hex
 
 pub const iusd_policy_id: ByteArray = #"f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b69880"
 pub const iusd_asset_name: ByteArray = #"69555344"  // "iUSD" in hex
+
+// =============================================================================
+// Escrow Types
+// =============================================================================
+
+pub type EscrowDatum {
+  target: Int,
+  deadline: Int,
+  investors: List<(VerificationKeyHash, Int)>,
+  seller: VerificationKeyHash,
+  stablecoin_asset: AssetClass,
+}
+
+pub type EscrowRedeemer {
+  Deposit
+  Finalize
+  Refund
+}

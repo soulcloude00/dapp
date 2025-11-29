@@ -3,4 +3,5 @@
 library;
 
 // ignore: deprecated_member_use
+// ignore: avoid_web_libraries_in_flutter
 export 'dart:js_util';

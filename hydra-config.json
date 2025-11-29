@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PropFi Hydra Node Configuration",
+  "description": "Configuration for Hydra node for PropFi property trading",
+  "networkId": {
+    "testnet": {
+      "magic": 1
+    }
+  },
+  "nodeSocket": "/tmp/cardano-node/node.socket",
+  "hydraScriptsTxId": "",
+  "contestationPeriod": 120,
+  "parties": [],
+  "apiHost": "0.0.0.0",
+  "apiPort": 4001,
+  "host": "0.0.0.0",
+  "port": 5001,
+  "monitoringPort": 6001,
+  "persistenceDir": "./hydra-persistence"
+}

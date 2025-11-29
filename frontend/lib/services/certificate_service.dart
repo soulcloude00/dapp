@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 // Conditional imports for web download
 import 'js_stub.dart' if (dart.library.html) 'js_web.dart' as js;
+import 'hydra_service.dart';
 
 /// Contract certificate data model
 class ContractCertificate {
@@ -173,6 +174,10 @@ class CertificateService extends ChangeNotifier {
   
   List<ContractCertificate> _certificates = [];
   List<ContractCertificate> get certificates => _certificates;
+  
+  final HydraService? hydraService;
+  
+  CertificateService({this.hydraService});
   
   /// Generate a unique certificate ID
   String generateCertificateId() {
@@ -599,5 +604,40 @@ class CertificateService extends ChangeNotifier {
       debugPrint('Error generating PDF: $e');
       rethrow;
     }
+  }
+  
+  /// Submit transaction to Hydra Head (L2) for instant confirmation
+  /// Returns true if submitted to Hydra, false if Hydra not available
+  Future<bool> submitToHydra(String txCborHex) async {
+    if (hydraService == null) {
+      debugPrint('Hydra service not available');
+      return false;
+    }
+    
+    if (!hydraService!.isConnected) {
+      debugPrint('Hydra not connected');
+      return false;
+    }
+    
+    if (hydraService!.status != HydraStatus.open) {
+      debugPrint('Hydra Head not open. Status: ${hydraService!.status}');
+      return false;
+    }
+    
+    try {
+      await hydraService!.submitTransaction(txCborHex);
+      debugPrint('Transaction submitted to Hydra Head');
+      return true;
+    } catch (e) {
+      debugPrint('Failed to submit to Hydra: $e');
+      return false;
+    }
+  }
+  
+  /// Check if Hydra is available for fast transactions
+  bool get isHydraAvailable {
+    return hydraService != null && 
+           hydraService!.isConnected && 
+           hydraService!.status == HydraStatus.open;
   }
 }

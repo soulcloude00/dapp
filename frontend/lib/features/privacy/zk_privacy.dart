@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 /// Zero-Knowledge Privacy Features for PropFi
 /// For Privacy in Action Award! 🔐
-/// 
+///
 /// Showcases ZK concepts for private property investments:
 /// - Balance proofs (prove funds without revealing amount)
 /// - Private purchases (hide purchase amounts)
@@ -96,8 +96,10 @@ class ZKPrivacyService extends ChangeNotifier {
   String? _lastError;
 
   List<BalanceProof> get balanceProofs => List.unmodifiable(_balanceProofs);
-  List<PrivatePurchase> get privatePurchases => List.unmodifiable(_privatePurchases);
-  List<AnonymousOwnership> get anonymousOwnerships => List.unmodifiable(_anonymousOwnerships);
+  List<PrivatePurchase> get privatePurchases =>
+      List.unmodifiable(_privatePurchases);
+  List<AnonymousOwnership> get anonymousOwnerships =>
+      List.unmodifiable(_anonymousOwnerships);
   bool get isGeneratingProof => _isGeneratingProof;
   String? get lastError => _lastError;
 
@@ -213,16 +215,15 @@ class ZKPrivacyService extends ChangeNotifier {
     try {
       await Future.delayed(const Duration(seconds: 1));
 
-      final ownerCommitment = _createCommitment(ownerAddress.hashCode.toDouble());
+      final ownerCommitment = _createCommitment(
+        ownerAddress.hashCode.toDouble(),
+      );
       final proof = ZKProof(
         proofId: 'zk_ownership_${DateTime.now().millisecondsSinceEpoch}',
         proofType: 'anonymous_ownership',
         commitment: ownerCommitment,
         timestamp: DateTime.now(),
-        publicInputs: {
-          'property_id': propertyId,
-          'ownership_valid': true,
-        },
+        publicInputs: {'property_id': propertyId, 'ownership_valid': true},
       );
 
       final ownership = AnonymousOwnership(
@@ -448,10 +449,7 @@ class _PrivatePurchaseDialogState extends State<PrivatePurchaseDialog> {
                       ),
                       Text(
                         'ZK-Protected Transaction',
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
                       ),
                     ],
                   ),
@@ -512,15 +510,16 @@ class _PrivatePurchaseDialogState extends State<PrivatePurchaseDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.privacy_tip, color: Color(0xFF00D9FF), size: 20),
+                  const Icon(
+                    Icons.privacy_tip,
+                    color: Color(0xFF00D9FF),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Your purchase amount is hidden. Only a ZK proof of validity is shared publicly.',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
                     ),
                   ),
                 ],
@@ -540,10 +539,7 @@ class _PrivatePurchaseDialogState extends State<PrivatePurchaseDialog> {
                   const SizedBox(height: 16),
                   Text(
                     _proofSteps[_proofStep],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
@@ -688,7 +684,9 @@ class _PrivacySettingsPanelState extends State<PrivacySettingsPanel> {
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a2e),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0033AD).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFF0033AD).withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -756,7 +754,11 @@ class _PrivacySettingsPanelState extends State<PrivacySettingsPanel> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Color(0xFF00D9FF), size: 16),
+                const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFF00D9FF),
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -820,7 +822,11 @@ class _PrivacySettingsPanelState extends State<PrivacySettingsPanel> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF00D9FF),
+            thumbColor: MaterialStateProperty.resolveWith(
+              (states) => states.contains(MaterialState.selected)
+                  ? const Color(0xFF00D9FF)
+                  : null,
+            ),
             activeTrackColor: const Color(0xFF0033AD),
           ),
         ],
@@ -865,7 +871,9 @@ class _ZKProofVisualizationState extends State<ZKProofVisualization>
       decoration: BoxDecoration(
         color: const Color(0xFF1a1a2e),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0033AD).withValues(alpha: 0.5)),
+        border: Border.all(
+          color: const Color(0xFF0033AD).withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -947,10 +955,12 @@ class _ZKProofVisualizationState extends State<ZKProofVisualization>
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 4),
-          ...widget.proof.publicInputs.entries.map((e) => _buildProofDetail(
-                e.key.replaceAll('_', ' '),
-                e.value.toString(),
-              )),
+          ...widget.proof.publicInputs.entries.map(
+            (e) => _buildProofDetail(
+              e.key.replaceAll('_', ' '),
+              e.value.toString(),
+            ),
+          ),
         ],
       ),
     );
@@ -994,10 +1004,12 @@ class GenerateBalanceProofDialog extends StatefulWidget {
   });
 
   @override
-  State<GenerateBalanceProofDialog> createState() => _GenerateBalanceProofDialogState();
+  State<GenerateBalanceProofDialog> createState() =>
+      _GenerateBalanceProofDialogState();
 }
 
-class _GenerateBalanceProofDialogState extends State<GenerateBalanceProofDialog> {
+class _GenerateBalanceProofDialogState
+    extends State<GenerateBalanceProofDialog> {
   final _minBalanceController = TextEditingController();
   bool _isProcessing = false;
   String? _error;
@@ -1136,7 +1148,10 @@ class _GenerateBalanceProofDialogState extends State<GenerateBalanceProofDialog>
 
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
               ],
 
               const SizedBox(height: 24),

@@ -4,6 +4,13 @@ library;
 
 // ignore: deprecated_member_use
 export 'dart:js';
+// ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+// ignore: deprecated_member_use
+import 'dart:js_util' as js_util;
 
-final webWindow = html.window;
+/// Use globalThis for JavaScript interop with js_util functions
+final webWindow = js_util.globalThis;
+
+/// Access to html window for DOM operations
+final htmlWindow = html.window;

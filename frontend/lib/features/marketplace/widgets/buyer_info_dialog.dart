@@ -37,7 +37,7 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
   @override
   Widget build(BuildContext context) {
     final goldColor = const Color(0xFFD4AF37);
-    
+
     return Dialog(
       backgroundColor: const Color(0xFF1A1A2E),
       shape: RoundedRectangleBorder(
@@ -62,7 +62,11 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                       color: goldColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.description_outlined, color: goldColor, size: 28),
+                    child: Icon(
+                      Icons.description_outlined,
+                      color: goldColor,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -90,9 +94,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Purchase Summary
               Container(
                 padding: const EdgeInsets.all(16),
@@ -132,9 +136,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Name Field (Required)
               Text(
                 'Full Name *',
@@ -147,7 +151,10 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                 decoration: InputDecoration(
                   hintText: 'Enter your full legal name',
                   hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.person_outline, color: Colors.grey[500]),
+                  prefixIcon: Icon(
+                    Icons.person_outline,
+                    color: Colors.grey[500],
+                  ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
@@ -169,9 +176,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Email Field (Optional)
               Text(
                 'Email (Optional)',
@@ -185,7 +192,10 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                 decoration: InputDecoration(
                   hintText: 'For transaction receipt',
                   hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[500]),
+                  prefixIcon: Icon(
+                    Icons.email_outlined,
+                    color: Colors.grey[500],
+                  ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
@@ -199,16 +209,18 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                 ),
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                   }
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Phone Field (Optional)
               Text(
                 'Phone (Optional)',
@@ -222,7 +234,10 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                 decoration: InputDecoration(
                   hintText: 'For important updates',
                   hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.phone_outlined, color: Colors.grey[500]),
+                  prefixIcon: Icon(
+                    Icons.phone_outlined,
+                    color: Colors.grey[500],
+                  ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
@@ -235,9 +250,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Terms Agreement
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,13 +262,18 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                     onChanged: (value) {
                       setState(() => _agreeToTerms = value ?? false);
                     },
-                    activeColor: goldColor,
+                    fillColor: MaterialStateProperty.resolveWith(
+                      (states) => states.contains(MaterialState.selected)
+                          ? goldColor
+                          : null,
+                    ),
                     checkColor: Colors.black,
                     side: BorderSide(color: Colors.grey[500]!),
                   ),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
+                      onTap: () =>
+                          setState(() => _agreeToTerms = !_agreeToTerms),
                       child: Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: Text(
@@ -268,9 +288,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Buttons
               Row(
                 children: [
@@ -296,7 +316,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                     child: ElevatedButton(
                       onPressed: _agreeToTerms ? _handleConfirm : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _agreeToTerms ? goldColor : Colors.grey[700],
+                        backgroundColor: _agreeToTerms
+                            ? goldColor
+                            : Colors.grey[700],
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -318,9 +340,9 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Info note
               Center(
                 child: Row(
@@ -330,10 +352,7 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
                     const SizedBox(width: 6),
                     Text(
                       'Your data is stored on-chain for verification',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 11),
                     ),
                   ],
                 ),
@@ -349,8 +368,12 @@ class _BuyerInfoDialogState extends State<BuyerInfoDialog> {
     if (_formKey.currentState!.validate()) {
       widget.onConfirm(
         _nameController.text.trim(),
-        _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : null,
-        _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+        _emailController.text.trim().isNotEmpty
+            ? _emailController.text.trim()
+            : null,
+        _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
       );
       Navigator.pop(context);
     }

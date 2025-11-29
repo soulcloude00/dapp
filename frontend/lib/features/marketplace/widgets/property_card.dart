@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:propfi/theme/app_theme.dart';
+import 'package:propfi/services/hydra_trading_service.dart';
 
 class PropertyCard extends StatelessWidget {
   final String title;
@@ -11,6 +12,7 @@ class PropertyCard extends StatelessWidget {
   final double? fundsRaised; // Funds raised in ADA
   final double? targetAmount; // Target amount in ADA
   final VoidCallback? onTap;
+  final HydraFraction? hydraFraction; // If present, enables Hydra "Instant Buy"
 
   const PropertyCard({
     super.key,
@@ -23,6 +25,7 @@ class PropertyCard extends StatelessWidget {
     this.fundsRaised,
     this.targetAmount,
     this.onTap,
+    this.hydraFraction,
   });
 
   @override
@@ -37,48 +40,91 @@ class PropertyCard extends StatelessWidget {
           children: [
             // Property Image
             Container(
-              height: 140,
+              height: 125,
               width: double.infinity,
               color: Colors.grey[900],
-              child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 140,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                            color: AppTheme.primaryColor,
-                            strokeWidth: 2,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
+              child: Stack(
+                children: [
+                  imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 125,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: AppTheme.primaryColor,
+                                strokeWidth: 2,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.apartment,
+                                size: 64,
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(
                           child: Icon(
                             Icons.apartment,
                             size: 64,
                             color: Colors.white.withValues(alpha: 0.2),
                           ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Icon(
-                        Icons.apartment,
-                        size: 64,
-                        color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                  // Hydra Badge
+                  if (hydraFraction != null)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.4),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.bolt, color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Instant Buy',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                ],
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -122,7 +168,7 @@ class PropertyCard extends StatelessWidget {
                     location,
                     style: TextStyle(color: Colors.grey[400], fontSize: 14),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   // Progress Bar
                   LinearProgressIndicator(
                     value: fundedPercentage,
@@ -131,7 +177,7 @@ class PropertyCard extends StatelessWidget {
                       AppTheme.secondaryColor,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -150,9 +196,12 @@ class PropertyCard extends StatelessWidget {
                   ),
                   // Show funds raised if available
                   if (fundsRaised != null && fundsRaised! > 0) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.secondaryColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),

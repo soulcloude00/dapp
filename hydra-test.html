@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydra Node Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-connect {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-connect:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        
+        .btn-disconnect {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-disconnect:hover {
+            background: #e53e3e;
+        }
+        
+        .btn-action {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-action:hover {
+            background: #38a169;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status.disconnected {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .log-container {
+            background: #1a202c;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .log-title {
+            color: #a0aec0;
+            font-weight: 600;
+        }
+        
+        .btn-clear {
+            background: #4a5568;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid #2d3748;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-time {
+            color: #718096;
+        }
+        
+        .log-tag {
+            color: #63b3ed;
+            font-weight: bold;
+        }
+        
+        .log-data {
+            color: #e2e8f0;
+            margin-top: 4px;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Hydra Node Test</h1>
+        <p class="subtitle">Test your Hydra Layer 2 connection</p>
+        
+        <div class="input-group">
+            <label for="wsUrl">WebSocket URL:</label>
+            <input type="text" id="wsUrl" value="ws://localhost:4001" placeholder="ws://localhost:4001">
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-connect" onclick="connect()">Connect</button>
+            <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+        </div>
+        
+        <div id="status" class="status disconnected">
+            ⚫ Disconnected
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-action" onclick="initHead()">Init Head</button>
+            <button class="btn-action" onclick="closeHead()">Close Head</button>
+            <button class="btn-action" onclick="fanout()">Fanout</button>
+        </div>
+        
+        <div class="log-container">
+            <div class="log-header">
+                <span class="log-title">📋 Message Log</span>
+                <button class="btn-clear" onclick="clearLog()">Clear</button>
+            </div>
+            <div id="log"></div>
+        </div>
+    </div>
+    
+    <script>
+        let ws = null;
+        
+        function log(tag, data = null) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const time = new Date().toLocaleTimeString();
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = `[${time}] `;
+            
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'log-tag';
+            tagSpan.textContent = tag;
+            
+            entry.appendChild(timeSpan);
+            entry.appendChild(tagSpan);
+            
+            if (data) {
+                const dataDiv = document.createElement('div');
+                dataDiv.className = 'log-data';
+                dataDiv.textContent = JSON.stringify(data, null, 2);
+                entry.appendChild(dataDiv);
+            }
+            
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            
+            // Keep only last 50 entries
+            while (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+        
+        function updateStatus(text, connected) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = text;
+            statusDiv.className = connected ? 'status connected' : 'status disconnected';
+        }
+        
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            
+            if (ws) {
+                log('ERROR', 'Already connected');
+                return;
+            }
+            
+            log('INFO', `Connecting to ${url}...`);
+            updateStatus('🔄 Connecting...', false);
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = () => {
+                    log('CONNECTED', 'Successfully connected to Hydra node');
+                    updateStatus('🟢 Connected', true);
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(data.tag || 'MESSAGE', data);
+                        
+                        // Update status based on head state
+                        if (data.tag === 'HeadIsOpen') {
+                            updateStatus('🟢 Connected - Head Open', true);
+                        } else if (data.tag === 'HeadIsClosed') {
+                            updateStatus('🟡 Connected - Head Closed', true);
+                        } else if (data.tag === 'HeadIsInitializing') {
+                            updateStatus('🟡 Connected - Initializing', true);
+                        }
+                    } catch (e) {
+                        log('ERROR', 'Failed to parse message: ' + e.message);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    log('ERROR', 'WebSocket error');
+                    updateStatus('🔴 Error', false);
+                };
+                
+                ws.onclose = () => {
+                    log('DISCONNECTED', 'Connection closed');
+                    updateStatus('⚫ Disconnected', false);
+                    ws = null;
+                };
+            } catch (e) {
+                log('ERROR', e.message);
+                updateStatus('🔴 Connection Failed', false);
+                ws = null;
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                log('INFO', 'Disconnecting...');
+            } else {
+                log('ERROR', 'Not connected');
+            }
+        }
+        
+        function send(message) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('ERROR', 'Not connected to Hydra node');
+                return;
+            }
+            
+            log('SEND', message);
+            ws.send(JSON.stringify(message));
+        }
+        
+        function initHead() {
+            send({ tag: 'Init' });
+        }
+        
+        function closeHead() {
+            send({ tag: 'Close' });
+        }
+        
+        function fanout() {
+            send({ tag: 'Fanout' });
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log('INFO', 'Log cleared');
+        }
+        
+        // Initial log message
+        log('INFO', 'Ready to connect. Enter WebSocket URL and click Connect.');
+    </script>
+</body>
+</html>

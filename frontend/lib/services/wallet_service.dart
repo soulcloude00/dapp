@@ -30,7 +30,8 @@ enum CardanoWallet {
   flint('flint', 'Flint'),
   yoroi('yoroi', 'Yoroi'),
   lace('lace', 'Lace'),
-  typhon('typhon', 'Typhon');
+  typhon('typhon', 'Typhon'),
+  vespr('vespr', 'Vespr');
 
   final String id;
   final String displayName;
@@ -56,11 +57,12 @@ class MarketplaceListing {
   final String fractionTokenName;
   final String txHash;
   final int outputIndex;
-  
+
   // Owner details for certificate
   final String? ownerName;
   final String? ownerEmail;
   final String? ownerPhone;
+  final double apy;
 
   MarketplaceListing({
     required this.id,
@@ -80,11 +82,12 @@ class MarketplaceListing {
     this.ownerName,
     this.ownerEmail,
     this.ownerPhone,
+    this.apy = 5.5, // Default APY if not provided
   });
 
   double get fundedPercentage =>
       (totalFractions - fractionsAvailable) / totalFractions;
-  
+
   int get fractionsSold => totalFractions - fractionsAvailable;
   double get fundsRaised => fractionsSold * pricePerFraction;
   double get targetAmount => totalFractions * pricePerFraction;
@@ -118,7 +121,8 @@ class PropertyHolding {
   });
 
   double get ownershipPercentage => (fractionsOwned / totalFractions) * 100;
-  double get profitLoss => ((currentValue - purchasePrice) / purchasePrice) * 100;
+  double get profitLoss =>
+      ((currentValue - purchasePrice) / purchasePrice) * 100;
 
   Map<String, dynamic> toJson() => {
     'propertyId': propertyId,
@@ -132,17 +136,18 @@ class PropertyHolding {
     'purchaseDate': purchaseDate.toIso8601String(),
   };
 
-  factory PropertyHolding.fromJson(Map<String, dynamic> json) => PropertyHolding(
-    propertyId: json['propertyId'],
-    propertyName: json['propertyName'],
-    location: json['location'],
-    imageUrl: json['imageUrl'] ?? '',
-    fractionsOwned: json['fractionsOwned'],
-    totalFractions: json['totalFractions'],
-    purchasePrice: (json['purchasePrice'] as num).toDouble(),
-    currentValue: (json['currentValue'] as num).toDouble(),
-    purchaseDate: DateTime.parse(json['purchaseDate']),
-  );
+  factory PropertyHolding.fromJson(Map<String, dynamic> json) =>
+      PropertyHolding(
+        propertyId: json['propertyId'],
+        propertyName: json['propertyName'],
+        location: json['location'],
+        imageUrl: json['imageUrl'] ?? '',
+        fractionsOwned: json['fractionsOwned'],
+        totalFractions: json['totalFractions'],
+        purchasePrice: (json['purchasePrice'] as num).toDouble(),
+        currentValue: (json['currentValue'] as num).toDouble(),
+        purchaseDate: DateTime.parse(json['purchaseDate']),
+      );
 }
 
 /// Represents a transaction in history
@@ -175,15 +180,16 @@ class TransactionRecord {
     'txHash': txHash,
   };
 
-  factory TransactionRecord.fromJson(Map<String, dynamic> json) => TransactionRecord(
-    id: json['id'],
-    type: TransactionType.values.firstWhere((e) => e.name == json['type']),
-    amount: (json['amount'] as num).toDouble(),
-    timestamp: DateTime.parse(json['timestamp']),
-    propertyName: json['propertyName'],
-    fractions: json['fractions'],
-    txHash: json['txHash'],
-  );
+  factory TransactionRecord.fromJson(Map<String, dynamic> json) =>
+      TransactionRecord(
+        id: json['id'],
+        type: TransactionType.values.firstWhere((e) => e.name == json['type']),
+        amount: (json['amount'] as num).toDouble(),
+        timestamp: DateTime.parse(json['timestamp']),
+        propertyName: json['propertyName'],
+        fractions: json['fractions'],
+        txHash: json['txHash'],
+      );
 }
 
 /// Service to handle wallet connection and transaction signing
@@ -225,7 +231,8 @@ class WalletService extends ChangeNotifier {
   // Portfolio getters
   List<PropertyHolding> get holdings => _holdings;
   List<TransactionRecord> get transactionHistory => _transactions;
-  double get portfolioValue => _holdings.fold(0.0, (sum, h) => sum + h.currentValue);
+  double get portfolioValue =>
+      _holdings.fold(0.0, (sum, h) => sum + h.currentValue);
 
   int get userLevel => _userLevel;
   int get userXp => _userXp;
@@ -253,26 +260,33 @@ class WalletService extends ChangeNotifier {
 
   Future<void> _loadPortfolio() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Debug: Check what's in storage
     final allKeys = prefs.getKeys();
     debugPrint('SharedPreferences keys: $allKeys');
-    
+
     // Load holdings using JSON
     final holdingsJsonStr = prefs.getString('holdings_json');
     debugPrint('Raw holdings_json from storage: $holdingsJsonStr');
-    
-    if (holdingsJsonStr != null && holdingsJsonStr.isNotEmpty && holdingsJsonStr != '[]') {
+
+    if (holdingsJsonStr != null &&
+        holdingsJsonStr.isNotEmpty &&
+        holdingsJsonStr != '[]') {
       try {
         final holdingsList = jsonDecode(holdingsJsonStr) as List;
-        _holdings = holdingsList.map((json) {
-          try {
-            return PropertyHolding.fromJson(Map<String, dynamic>.from(json));
-          } catch (e) {
-            debugPrint('Error parsing holding: $e');
-            return null;
-          }
-        }).whereType<PropertyHolding>().toList();
+        _holdings = holdingsList
+            .map((json) {
+              try {
+                return PropertyHolding.fromJson(
+                  Map<String, dynamic>.from(json),
+                );
+              } catch (e) {
+                debugPrint('Error parsing holding: $e');
+                return null;
+              }
+            })
+            .whereType<PropertyHolding>()
+            .toList();
         debugPrint('Loaded ${_holdings.length} holdings from storage');
       } catch (e) {
         debugPrint('Error loading holdings: $e');
@@ -285,17 +299,23 @@ class WalletService extends ChangeNotifier {
 
     // Load transactions using JSON
     final txJsonStr = prefs.getString('transactions_json');
+
     if (txJsonStr != null && txJsonStr.isNotEmpty && txJsonStr != '[]') {
       try {
         final txList = jsonDecode(txJsonStr) as List;
-        _transactions = txList.map((json) {
-          try {
-            return TransactionRecord.fromJson(Map<String, dynamic>.from(json));
-          } catch (e) {
-            debugPrint('Error parsing transaction: $e');
-            return null;
-          }
-        }).whereType<TransactionRecord>().toList();
+        _transactions = txList
+            .map((json) {
+              try {
+                return TransactionRecord.fromJson(
+                  Map<String, dynamic>.from(json),
+                );
+              } catch (e) {
+                debugPrint('Error parsing transaction: $e');
+                return null;
+              }
+            })
+            .whereType<TransactionRecord>()
+            .toList();
         debugPrint('Loaded ${_transactions.length} transactions from storage');
       } catch (e) {
         debugPrint('Error loading transactions: $e');
@@ -320,7 +340,7 @@ class WalletService extends ChangeNotifier {
 
   Future<void> _savePortfolio() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Save holdings as JSON
     final holdingsJson = _holdings.map((h) => h.toJson()).toList();
     await prefs.setString('holdings_json', jsonEncode(holdingsJson));
@@ -339,35 +359,39 @@ class WalletService extends ChangeNotifier {
 
     try {
       debugPrint('Syncing holdings from blockchain...');
-      
+
       // Get wallet assets
       final assets = await getWalletAssets();
       final tokens = assets['tokens'] as Map<String, dynamic>? ?? {};
-      
+
       debugPrint('Found ${tokens.length} token types in wallet');
       debugPrint('Current local holdings: ${_holdings.length}');
-      
+
       // In direct payment mode, fraction tokens may not be in the wallet
       // Holdings are tracked locally via recordPurchase
       // This sync is for when actual fraction tokens are received
-      
+
       if (tokens.isEmpty) {
         debugPrint('No tokens found - using locally saved holdings');
         return;
       }
-      
+
       // Get on-chain properties to match tokens with property names
       final window = js.webWindow;
       if (window == null) return;
-      
+
       if (!js_util.hasProperty(window, 'PropFiBridge')) return;
       final bridge = js_util.getProperty(window, 'PropFiBridge');
-      
+
       // Fetch property metadata from chain
       Map<String, dynamic> propertyMetadata = {};
       if (js_util.hasProperty(bridge, 'fetchOnChainPropertiesJson')) {
         try {
-          final promise = js_util.callMethod(bridge, 'fetchOnChainPropertiesJson', []);
+          final promise = js_util.callMethod(
+            bridge,
+            'fetchOnChainPropertiesJson',
+            [],
+          );
           final jsonStr = await js_util.promiseToFuture(promise);
           if (jsonStr != null && jsonStr is String) {
             final properties = jsonDecode(jsonStr) as List;
@@ -377,23 +401,25 @@ class WalletService extends ChangeNotifier {
                 propertyMetadata[propId] = prop;
               }
             }
-            debugPrint('Fetched ${propertyMetadata.length} property metadata records');
+            debugPrint(
+              'Fetched ${propertyMetadata.length} property metadata records',
+            );
           }
         } catch (e) {
           debugPrint('Error fetching property metadata: $e');
         }
       }
-      
+
       // Match tokens with fraction policy
       final fractionPolicyId = ContractConfig.cip68MintingPolicyId;
       int tokensMatched = 0;
-      
+
       for (final entry in tokens.entries) {
         final assetId = entry.key;
         final amount = int.tryParse(entry.value.toString()) ?? 0;
-        
+
         debugPrint('Checking token: $assetId with amount: $amount');
-        
+
         // Check if this is a fraction token (starts with our policy ID)
         if (assetId.startsWith(fractionPolicyId) && amount > 0) {
           tokensMatched++;
@@ -406,20 +432,30 @@ class WalletService extends ChangeNotifier {
           } else if (assetName.startsWith('000643b0')) {
             propertyId = assetName.substring(8); // User token prefix
           }
-          
-          debugPrint('Found fraction token: $propertyId with $amount fractions');
-          
+
+          debugPrint(
+            'Found fraction token: $propertyId with $amount fractions',
+          );
+
           // Look up property info
           final propInfo = propertyMetadata[propertyId];
           final propName = propInfo?['name'] ?? 'Property $propertyId';
           final propLocation = propInfo?['location'] ?? 'Unknown';
           final propImage = propInfo?['image'] ?? '';
-          final totalFractions = int.tryParse(propInfo?['totalFractions']?.toString() ?? '1000') ?? 1000;
-          final pricePerFraction = double.tryParse(propInfo?['pricePerFraction']?.toString() ?? '10') ?? 10.0;
-          
+          final totalFractions =
+              int.tryParse(propInfo?['totalFractions']?.toString() ?? '1000') ??
+              1000;
+          final pricePerFraction =
+              double.tryParse(
+                propInfo?['pricePerFraction']?.toString() ?? '10',
+              ) ??
+              10.0;
+
           // Update or add holding
-          final existingIndex = _holdings.indexWhere((h) => h.propertyId == propertyId);
-          
+          final existingIndex = _holdings.indexWhere(
+            (h) => h.propertyId == propertyId,
+          );
+
           if (existingIndex >= 0) {
             // Update existing holding with on-chain amount
             final existing = _holdings[existingIndex];
@@ -436,27 +472,29 @@ class WalletService extends ChangeNotifier {
             );
           } else {
             // Add new holding from chain
-            _holdings.add(PropertyHolding(
-              propertyId: propertyId,
-              propertyName: propName,
-              location: propLocation,
-              imageUrl: propImage,
-              fractionsOwned: amount,
-              totalFractions: totalFractions,
-              purchasePrice: amount * pricePerFraction,
-              currentValue: amount * pricePerFraction,
-              purchaseDate: DateTime.now(),
-            ));
+            _holdings.add(
+              PropertyHolding(
+                propertyId: propertyId,
+                propertyName: propName,
+                location: propLocation,
+                imageUrl: propImage,
+                fractionsOwned: amount,
+                totalFractions: totalFractions,
+                purchasePrice: amount * pricePerFraction,
+                currentValue: amount * pricePerFraction,
+                purchaseDate: DateTime.now(),
+              ),
+            );
           }
         }
       }
-      
+
       debugPrint('Matched $tokensMatched fraction tokens from wallet');
-      
+
       if (tokensMatched > 0) {
         await _savePortfolio();
       }
-      
+
       debugPrint('Holdings synced: ${_holdings.length} properties owned');
       notifyListeners();
       debugPrint('Holdings synced: ${_holdings.length} properties owned');
@@ -470,79 +508,111 @@ class WalletService extends ChangeNotifier {
   /// This queries the blockchain for transactions with Crestadel purchase metadata
   Future<void> fetchOnChainPurchases() async {
     if (_status != WalletConnectionStatus.connected || !kIsWeb) return;
-    
+
     try {
       debugPrint('Fetching on-chain purchases from blockchain metadata...');
+
+      final window = js.webWindow;
+      if (window == null) {
+        debugPrint('Window not available');
+        return;
+      }
       
-      final bridge = js.context['PropFiBridge'];
-      if (bridge == null) {
+      if (!js_util.hasProperty(window, 'PropFiBridge')) {
         debugPrint('PropFiBridge not available');
         return;
       }
       
+      final bridge = js_util.getProperty(window, 'PropFiBridge');
+
       // Check if function exists
       if (!js_util.hasProperty(bridge, 'fetchUserPurchasesJson')) {
         debugPrint('fetchUserPurchasesJson not available in bridge');
         return;
       }
-      
+
       // Call the bridge to fetch on-chain purchases
-      final fetchPromise = js_util.callMethod(bridge, 'fetchUserPurchasesJson', []);
-      final purchasesJsonStr = await js_util.promiseToFuture<String?>(fetchPromise);
-      
+      final fetchPromise = js_util.callMethod(
+        bridge,
+        'fetchUserPurchasesJson',
+        [],
+      );
+      final purchasesJsonStr = await js_util.promiseToFuture<String?>(
+        fetchPromise,
+      );
+
       if (purchasesJsonStr == null || purchasesJsonStr.isEmpty) {
         debugPrint('No on-chain purchases found');
         return;
       }
-      
+
       debugPrint('On-chain purchases JSON: $purchasesJsonStr');
-      
+
       final List<dynamic> purchases = jsonDecode(purchasesJsonStr);
       debugPrint('Found ${purchases.length} on-chain purchases');
-      
+
       // Property metadata for lookup
       final propertyMetadata = {
         'prop_tower_1': {
           'name': 'Skyline Tower',
           'location': 'Downtown, New York',
-          'image': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
+          'image':
+              'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
           'totalFractions': '1000',
           'pricePerFraction': '50',
         },
         'prop_marina_2': {
           'name': 'Marina Bay Residences',
           'location': 'Marina Bay, Singapore',
-          'image': 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400',
+          'image':
+              'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400',
           'totalFractions': '500',
           'pricePerFraction': '100',
         },
         'prop_lux_3': {
           'name': 'Luxury Apartments',
           'location': 'Beverly Hills, CA',
-          'image': 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
+          'image':
+              'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
           'totalFractions': '2000',
           'pricePerFraction': '25',
         },
       };
-      
+
       for (final purchase in purchases) {
         final propertyId = purchase['propertyId']?.toString() ?? '';
-        final propertyName = purchase['propertyName']?.toString() ?? 'Unknown Property';
-        final fractions = int.tryParse(purchase['fractions']?.toString() ?? '0') ?? 0;
-        final priceAda = double.tryParse(purchase['priceAda']?.toString() ?? '0') ?? 0.0;
+        final propertyName =
+            purchase['propertyName']?.toString() ?? 'Unknown Property';
+        final fractions =
+            int.tryParse(purchase['fractions']?.toString() ?? '0') ?? 0;
+        final priceAda =
+            double.tryParse(purchase['priceAda']?.toString() ?? '0') ?? 0.0;
         final timestamp = purchase['timestamp']?.toString() ?? '';
-        // txHash available in purchase['txHash'] if needed
+        final txHash = purchase['txHash']?.toString() ?? '';
+
+        // Skip if no fractions purchased
+        if (fractions <= 0) {
+          debugPrint('Skipping purchase with 0 fractions: $txHash');
+          continue;
+        }
         
-        if (propertyId.isEmpty || fractions <= 0) continue;
-        
-        debugPrint('Processing on-chain purchase: $propertyName, $fractions fractions at $priceAda ADA');
-        
+        // Generate propertyId from txHash if not provided (old format transactions)
+        final effectivePropertyId = propertyId.isNotEmpty 
+            ? propertyId 
+            : (txHash.isNotEmpty ? 'prop_${txHash.substring(0, 8)}' : 'prop_unknown');
+
+        debugPrint(
+          'Processing on-chain purchase: $propertyName, $fractions fractions at $priceAda ADA (propertyId: $effectivePropertyId)',
+        );
+
         // Look up property info or use stored values
-        final propInfo = propertyMetadata[propertyId];
+        final propInfo = propertyMetadata[effectivePropertyId];
         final location = propInfo?['location'] ?? 'Unknown Location';
         final imageUrl = propInfo?['image'] ?? '';
-        final totalFractions = int.tryParse(propInfo?['totalFractions']?.toString() ?? '1000') ?? 1000;
-        
+        final totalFractions =
+            int.tryParse(propInfo?['totalFractions']?.toString() ?? '1000') ??
+            1000;
+
         // Parse timestamp
         DateTime purchaseDate = DateTime.now();
         if (timestamp.isNotEmpty) {
@@ -552,18 +622,20 @@ class WalletService extends ChangeNotifier {
             debugPrint('Could not parse timestamp: $timestamp');
           }
         }
-        
+
         // Find existing holding or create new
-        final existingIndex = _holdings.indexWhere((h) => h.propertyId == propertyId);
-        
+        final existingIndex = _holdings.indexWhere(
+          (h) => h.propertyId == effectivePropertyId,
+        );
+
         if (existingIndex >= 0) {
           // Update existing - add fractions if this is a new transaction
           final existing = _holdings[existingIndex];
           // Check if we already processed this transaction (by comparing total fractions)
           if (existing.fractionsOwned < fractions) {
             _holdings[existingIndex] = PropertyHolding(
-              propertyId: propertyId,
-              propertyName: propertyName,
+              propertyId: effectivePropertyId,
+              propertyName: propertyName.isNotEmpty ? propertyName : 'Property Purchase',
               location: location,
               imageUrl: imageUrl,
               fractionsOwned: fractions, // Use the on-chain value
@@ -576,27 +648,33 @@ class WalletService extends ChangeNotifier {
           }
         } else {
           // Add new holding from on-chain data
-          _holdings.add(PropertyHolding(
-            propertyId: propertyId,
-            propertyName: propertyName,
-            location: location,
-            imageUrl: imageUrl,
-            fractionsOwned: fractions,
-            totalFractions: totalFractions,
-            purchasePrice: priceAda,
-            currentValue: priceAda,
-            purchaseDate: purchaseDate,
-          ));
-          debugPrint('Added new holding from on-chain: $propertyName with $fractions fractions');
+          _holdings.add(
+            PropertyHolding(
+              propertyId: effectivePropertyId,
+              propertyName: propertyName.isNotEmpty ? propertyName : 'Property Purchase',
+              location: location,
+              imageUrl: imageUrl,
+              fractionsOwned: fractions,
+              totalFractions: totalFractions,
+              purchasePrice: priceAda,
+              currentValue: priceAda,
+              purchaseDate: purchaseDate,
+            ),
+          );
+          debugPrint(
+            'Added new holding from on-chain: $propertyName with $fractions fractions',
+          );
         }
       }
-      
+
       if (purchases.isNotEmpty) {
         await _savePortfolio();
         notifyListeners();
       }
-      
-      debugPrint('On-chain purchases sync complete. Total holdings: ${_holdings.length}');
+
+      debugPrint(
+        'On-chain purchases sync complete. Total holdings: ${_holdings.length}',
+      );
     } catch (e) {
       debugPrint('Error fetching on-chain purchases: $e');
     }
@@ -613,11 +691,15 @@ class WalletService extends ChangeNotifier {
     required double amount,
     String? txHash,
   }) async {
-    debugPrint('Recording purchase: $propertyName, $fractions fractions, $amount ADA');
-    
+    debugPrint(
+      'Recording purchase: $propertyName, $fractions fractions, $amount ADA',
+    );
+
     // Find existing holding or create new
-    final existingIndex = _holdings.indexWhere((h) => h.propertyId == propertyId);
-    
+    final existingIndex = _holdings.indexWhere(
+      (h) => h.propertyId == propertyId,
+    );
+
     if (existingIndex >= 0) {
       final existing = _holdings[existingIndex];
       _holdings[existingIndex] = PropertyHolding(
@@ -631,32 +713,39 @@ class WalletService extends ChangeNotifier {
         currentValue: existing.currentValue + amount,
         purchaseDate: existing.purchaseDate,
       );
-      debugPrint('Updated existing holding: now owns ${existing.fractionsOwned + fractions} fractions');
+      debugPrint(
+        'Updated existing holding: now owns ${existing.fractionsOwned + fractions} fractions',
+      );
     } else {
-      _holdings.add(PropertyHolding(
-        propertyId: propertyId,
-        propertyName: propertyName,
-        location: location,
-        imageUrl: imageUrl,
-        fractionsOwned: fractions,
-        totalFractions: totalFractions,
-        purchasePrice: amount,
-        currentValue: amount,
-        purchaseDate: DateTime.now(),
-      ));
+      _holdings.add(
+        PropertyHolding(
+          propertyId: propertyId,
+          propertyName: propertyName,
+          location: location,
+          imageUrl: imageUrl,
+          fractionsOwned: fractions,
+          totalFractions: totalFractions,
+          purchasePrice: amount,
+          currentValue: amount,
+          purchaseDate: DateTime.now(),
+        ),
+      );
       debugPrint('Added new holding: $propertyName with $fractions fractions');
     }
 
     // Add transaction record
-    _transactions.insert(0, TransactionRecord(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: TransactionType.buy,
-      amount: amount,
-      timestamp: DateTime.now(),
-      propertyName: propertyName,
-      fractions: fractions,
-      txHash: txHash,
-    ));
+    _transactions.insert(
+      0,
+      TransactionRecord(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: TransactionType.buy,
+        amount: amount,
+        timestamp: DateTime.now(),
+        propertyName: propertyName,
+        fractions: fractions,
+        txHash: txHash,
+      ),
+    );
 
     await _savePortfolio();
     debugPrint('Portfolio saved. Total holdings: ${_holdings.length}');
@@ -688,6 +777,10 @@ class WalletService extends ChangeNotifier {
   }
 
   /// Check which wallets are available in the browser
+  Future<List<CardanoWallet>> detectWallets() async {
+    return getAvailableWallets();
+  }
+
   List<CardanoWallet> getAvailableWallets() {
     if (!kIsWeb) return [];
 
@@ -695,45 +788,69 @@ class WalletService extends ChangeNotifier {
 
     try {
       final window = js.webWindow;
-      if (window == null) return [];
+      if (window == null) {
+        debugPrint('getAvailableWallets: window is null');
+        return [];
+      }
 
       // Try via PropFiBridge first (most robust)
       if (js_util.hasProperty(window, 'PropFiBridge')) {
         final bridge = js_util.getProperty(window, 'PropFiBridge');
+        debugPrint('getAvailableWallets: Found PropFiBridge');
         if (js_util.hasProperty(bridge, 'getAvailableWallets')) {
           final walletsJs = js_util.callMethod(
             bridge,
             'getAvailableWallets',
             [],
           );
-          if (walletsJs is List) {
-            for (final wId in walletsJs) {
-              try {
-                final wallet = CardanoWallet.values.firstWhere(
-                  (w) => w.id == wId,
-                );
-                if (!available.contains(wallet)) available.add(wallet);
-              } catch (_) {}
-            }
-            if (available.isNotEmpty) {
-              debugPrint(
-                'PropFiBridge detected wallets: ${available.map((w) => w.displayName).join(", ")}',
-              );
-              return available;
+          debugPrint('getAvailableWallets: walletsJs = $walletsJs (type: ${walletsJs.runtimeType})');
+          
+          // Convert JS array to Dart list using JSON stringify/parse
+          final walletIds = <String>[];
+          if (walletsJs != null) {
+            // Use JSON.stringify to convert JS array to string, then parse in Dart
+            final jsonStr = js_util.callMethod(
+              js_util.getProperty(window, 'JSON'),
+              'stringify',
+              [walletsJs],
+            );
+            debugPrint('getAvailableWallets: JSON string = $jsonStr');
+            if (jsonStr != null && jsonStr is String) {
+              final List<dynamic> parsed = jsonDecode(jsonStr);
+              for (final id in parsed) {
+                walletIds.add(id.toString());
+              }
             }
           }
+          
+          debugPrint('getAvailableWallets: walletIds = $walletIds');
+          
+          for (final wId in walletIds) {
+            try {
+              final wallet = CardanoWallet.values.firstWhere(
+                (w) => w.id == wId,
+              );
+              if (!available.contains(wallet)) available.add(wallet);
+            } catch (_) {}
+          }
+          if (available.isNotEmpty) {
+            debugPrint(
+              'PropFiBridge detected wallets: ${available.map((w) => w.displayName).join(", ")}',
+            );
+            return available;
+          }
         }
+      } else {
+        debugPrint('getAvailableWallets: PropFiBridge not found on window');
       }
 
-      // Fallback to manual detection
+      // Fallback to manual detection via window.cardano
       if (!js_util.hasProperty(window, 'cardano')) {
         debugPrint('window.cardano is null - no Cardano wallets detected');
         return [];
       }
 
       final cardano = js_util.getProperty(window, 'cardano');
-      debugPrint('window.cardano found, checking for wallets...');
-
       for (final wallet in CardanoWallet.values) {
         try {
           if (js_util.hasProperty(cardano, wallet.id)) {
@@ -744,10 +861,6 @@ class WalletService extends ChangeNotifier {
           debugPrint('Error checking wallet ${wallet.id}: $e');
         }
       }
-
-      debugPrint(
-        'Available wallets: ${available.map((w) => w.displayName).join(", ")}',
-      );
     } catch (e) {
       debugPrint('Error detecting wallets: $e');
     }
@@ -755,33 +868,9 @@ class WalletService extends ChangeNotifier {
     return available;
   }
 
-  /// robustly detect wallets with retries
-  Future<List<CardanoWallet>> detectWallets({
-    int retries = 10,
-    Duration delay = const Duration(milliseconds: 500),
-  }) async {
-    if (!kIsWeb) return [];
-
-    for (int i = 0; i < retries; i++) {
-      final wallets = getAvailableWallets();
-      if (wallets.isNotEmpty) {
-        return wallets;
-      }
-      debugPrint(
-        'No wallets found, retrying in ${delay.inMilliseconds}ms... (${i + 1}/$retries)',
-      );
-      await Future.delayed(delay);
-    }
-
-    return [];
-  }
-
   /// Connect to a specific wallet
   Future<bool> connectWallet(CardanoWallet wallet) async {
-    if (!kIsWeb) {
-      // For non-web platforms, simulate connection
-      return _simulateConnection(wallet);
-    }
+    if (!kIsWeb) return false;
 
     _status = WalletConnectionStatus.connecting;
     _errorMessage = null;
@@ -853,10 +942,10 @@ class WalletService extends ChangeNotifier {
 
       // Load saved holdings for this wallet
       await _loadPortfolio();
-      
+
       // Then sync from chain to get any updates
       await syncHoldingsFromChain();
-      
+
       // Also fetch purchases from on-chain metadata (decentralized storage)
       await fetchOnChainPurchases();
 
@@ -913,19 +1002,83 @@ class WalletService extends ChangeNotifier {
     _walletApi = null;
     _errorMessage = null;
     _balance = 0.0;
-    
+
     // Reset profile to default
     _userName = 'CryptoTycoon';
     _userBio = 'Real Estate Mogul';
     _isLoggedIn = false;
-    
+
     // Clear persisted wallet data
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('connectedWalletId');
     await prefs.setString('userName', 'CryptoTycoon');
     await prefs.setString('userBio', 'Real Estate Mogul');
     await prefs.setBool('isLoggedIn', false);
-    
+
+    notifyListeners();
+  }
+
+  /// Get wallet balance in ADA
+  Future<double> getBalance() async {
+    if (kIsWeb) {
+      try {
+        final window = js.webWindow;
+        if (window == null) return 0.0;
+        if (!js_util.hasProperty(window, 'PropFiBridge')) return 0.0;
+        
+        final bridge = js_util.getProperty(window, 'PropFiBridge');
+        final balance = await js_util.promiseToFuture(
+          js_util.callMethod(bridge, 'getBalance', []),
+        );
+        return (balance as num).toDouble();
+      } catch (e) {
+        debugPrint('Error getting balance: $e');
+        return 0.0;
+      }
+    }
+    return 0.0;
+  }
+
+  /// Get detailed wallet assets
+  Future<Map<String, dynamic>> getWalletAssets() async {
+    if (kIsWeb) {
+      try {
+        final window = js.webWindow;
+        if (window == null) return {};
+        if (!js_util.hasProperty(window, 'PropFiBridge')) return {};
+        
+        final bridge = js_util.getProperty(window, 'PropFiBridge');
+        final jsonStr = await js_util.promiseToFuture(
+          js_util.callMethod(bridge, 'getWalletAssetsJson', []),
+        );
+        return jsonDecode(jsonStr as String) as Map<String, dynamic>;
+      } catch (e) {
+        debugPrint('Error getting wallet assets: $e');
+        return {};
+      }
+    }
+    return {};
+  }
+
+  /// Extract Payment Key Hash from address (simplified)
+  String _extractPkh(String address) {
+    // In a real app, use a library to decode bech32 and get the hash.
+    // For now, we'll just return a placeholder or a slice if it's long enough.
+    if (address.length > 10) {
+      return address.substring(address.length - 10);
+    }
+    return address;
+  }
+
+  /// Gain XP for RPG elements
+  void gainXp(int amount) {
+    _userXp += amount;
+    if (_userXp >= nextLevelXp) {
+      _userLevel++;
+      _userXp -= nextLevelXp; // Carry over excess
+      debugPrint('Level Up! Now level $_userLevel');
+    }
+    _saveRpgStats();
     notifyListeners();
   }
 
@@ -999,8 +1152,8 @@ class WalletService extends ChangeNotifier {
         }
         final bridge = js_util.getProperty(window, 'PropFiBridge');
 
-        // Build transaction via bridge
-        final listingJs = js.JsObject.jsify({
+        // Build transaction via bridge (use js_util.jsify for globalThis compatibility)
+        final listingJs = js_util.jsify({
           'txHash': listing.txHash,
           'outputIndex': listing.outputIndex,
           'policyId': listing.fractionPolicyId,
@@ -1065,7 +1218,8 @@ class WalletService extends ChangeNotifier {
         }
         final bridge = js_util.getProperty(window, 'PropFiBridge');
 
-        final metadata = js.JsObject.jsify({
+        // Use js_util.jsify for globalThis compatibility
+        final metadata = js_util.jsify({
           'name': name,
           'description': description,
           'location': location,
@@ -1166,8 +1320,8 @@ class WalletService extends ChangeNotifier {
         final bridge = js_util.getProperty(window, 'PropFiBridge');
 
         // Use the new metadata-enabled transaction for decentralized storage
-        // Include buyer details for certificate generation
-        final purchaseData = js.JsObject.jsify({
+        // Include buyer details for certificate generation (use js_util.jsify for globalThis compatibility)
+        final purchaseData = js_util.jsify({
           'propertyId': propertyId,
           'propertyName': propertyName ?? 'Property $propertyId',
           'fractions': amount,
@@ -1200,7 +1354,6 @@ class WalletService extends ChangeNotifier {
 
         // Gain XP for buying
         gainXp(500);
-
         return txHash;
       } else {
         await Future.delayed(const Duration(seconds: 2));
@@ -1239,6 +1392,7 @@ class WalletService extends ChangeNotifier {
           ownerName: property.ownerName,
           ownerEmail: property.ownerEmail,
           ownerPhone: property.ownerPhone,
+          apy: 5.5, // Default APY for admin properties
         );
       }).toList();
 
@@ -1284,6 +1438,13 @@ class WalletService extends ChangeNotifier {
                 final metadata = getProp(listing, 'metadata');
                 final datum = getProp(listing, 'datum');
 
+                // Parse APY from metadata or default to 5.5
+                final apy =
+                    double.tryParse(
+                      getProp(metadata, 'apy')?.toString() ?? '5.5',
+                    ) ??
+                    5.5;
+
                 return MarketplaceListing(
                   id: idx.toString(),
                   propertyName: metadata != null
@@ -1314,6 +1475,7 @@ class WalletService extends ChangeNotifier {
                   fractionTokenName: getProp(listing, 'assetName') ?? '',
                   txHash: getProp(listing, 'txHash') ?? '',
                   outputIndex: getProp(listing, 'outputIndex') ?? 0,
+                  apy: apy,
                 );
               }).toList();
 
@@ -1333,113 +1495,104 @@ class WalletService extends ChangeNotifier {
     return _listings;
   }
 
-  /// Extract payment key hash from address (simplified)
-  String _extractPkh(String address) {
-    // In production, properly decode bech32 address
-    // For now, return a mock PKH
-    return address.length > 20 ? address.substring(10, 66) : 'mock_pkh';
-  }
-
-  /// Simulate wallet connection for non-web platforms
-  Future<bool> _simulateConnection(CardanoWallet wallet) async {
-    _status = WalletConnectionStatus.connecting;
-    notifyListeners();
-
-    await Future.delayed(const Duration(seconds: 1));
-
-    _connectedWallet = wallet;
-    _walletAddress =
-        'addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae';
-    _walletPkh = '82a814cc3db6f04d44e47e21af627f06c7c66d14f5c6c5e4a0c0c38c';
-    _status = WalletConnectionStatus.connected;
-    notifyListeners();
-
-    return true;
-  }
-
-  void gainXp(int amount) {
-    _userXp += amount;
-    // Check for level up
-    if (_userXp >= nextLevelXp) {
-      _userLevel++;
-      _userXp -= nextLevelXp;
-    }
-    _saveRpgStats();
-    notifyListeners();
-  }
-
   /// Refresh the wallet balance and holdings from the blockchain
   Future<void> refreshBalance() async {
     if (!isConnected) return;
-    
+
     try {
       final newBalance = await getBalance();
       if (newBalance != _balance) {
         _balance = newBalance;
         debugPrint('Balance updated: $_balance ADA');
       }
-      
+
       // Also sync holdings from chain
       await syncHoldingsFromChain();
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Error refreshing balance: $e');
     }
   }
 
-  /// Get balance from the connected wallet
-  Future<double> getBalance() async {
-    if (!kIsWeb) return 0.0;
-    
-    try {
-      final window = js.webWindow;
-      if (window == null) {
-        debugPrint('getBalance: window is null');
-        return 0.0;
-      }
-      
-      if (!js_util.hasProperty(window, 'PropFiBridge')) {
-        debugPrint('getBalance: PropFiBridge not found');
-        return 0.0;
-      }
-      
-      final bridge = js_util.getProperty(window, 'PropFiBridge');
-      debugPrint('getBalance: Calling PropFiBridge.getBalance()...');
-      
-      final promise = js_util.callMethod(bridge, 'getBalance', []);
-      final balance = await js_util.promiseToFuture(promise);
-      
-      debugPrint('getBalance: Raw balance result: $balance (type: ${balance.runtimeType})');
-      
-      final balanceDouble = (balance as num).toDouble();
-      debugPrint('getBalance: Parsed balance: $balanceDouble ADA');
-      
-      return balanceDouble;
-    } catch (e) {
-      debugPrint('Error fetching balance: $e');
-      return 0.0;
-    }
-  }
+  /// Connect to a mobile wallet via CIP-45 (P2P)
+  Future<String?> connectMobileWallet() async {
+    if (!kIsWeb) return null;
 
-  /// Get detailed wallet assets (native tokens, NFTs, etc.)
-  Future<Map<String, dynamic>> getWalletAssets() async {
-    if (!kIsWeb || !isConnected) return {};
-    
     try {
       final window = js.webWindow;
       if (window != null && js_util.hasProperty(window, 'PropFiBridge')) {
         final bridge = js_util.getProperty(window, 'PropFiBridge');
-        if (js_util.hasProperty(bridge, 'getWalletAssets')) {
-          final promise = js_util.callMethod(bridge, 'getWalletAssets', []);
-          final assets = await js_util.promiseToFuture(promise);
-          debugPrint('Wallet assets: $assets');
-          return Map<String, dynamic>.from(assets as Map);
+        if (js_util.hasProperty(bridge, 'initPeerConnect')) {
+          final promise = js_util.callMethod(bridge, 'initPeerConnect', []);
+          final result = await js_util.promiseToFuture(promise);
+          return result as String?;
         }
       }
+      return null;
     } catch (e) {
-      debugPrint('Error fetching wallet assets: $e');
+      debugPrint('Error initializing mobile wallet connection: $e');
+      return null;
     }
-    return {};
+  }
+
+  /// Wait for mobile wallet connection to complete
+  Future<bool> waitForMobileConnection() async {
+    if (!kIsWeb) return false;
+
+    try {
+      final window = js.webWindow;
+      if (window != null && js_util.hasProperty(window, 'PropFiBridge')) {
+        final bridge = js_util.getProperty(window, 'PropFiBridge');
+        if (js_util.hasProperty(bridge, 'waitForMobileConnection')) {
+          final promise = js_util.callMethod(
+            bridge,
+            'waitForMobileConnection',
+            [],
+          );
+          final result = await js_util.promiseToFuture(promise);
+
+          if (result == true) {
+            // Update local state
+            _status = WalletConnectionStatus.connected;
+            _connectedWallet =
+                CardanoWallet.vespr; // Default to Vespr or generic mobile
+            _walletAddress = await _getWalletAddressFromBridge();
+            _walletPkh = _extractPkh(_walletAddress ?? '');
+
+            // Fetch balance and profile
+            _balance = await getBalance();
+            _userName = 'Mobile User';
+            _userBio = 'Connected via CIP-45';
+
+            notifyListeners();
+            return true;
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error waiting for mobile connection: $e');
+      return false;
+    }
+  }
+
+  Future<String?> _getWalletAddressFromBridge() async {
+    try {
+      final window = js.webWindow;
+      final bridge = js_util.getProperty(window!, 'PropFiBridge');
+      final api = await js_util.promiseToFuture(
+        js_util.callMethod(bridge, 'getWalletApi', []),
+      );
+      if (api != null) {
+        final addresses = await js_util.promiseToFuture(
+          js_util.callMethod(api, 'getUsedAddresses', []),
+        );
+        if (addresses is List && addresses.isNotEmpty) {
+          return addresses[0] as String;
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 }

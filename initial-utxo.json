@@ -1,0 +1,22 @@
+{
+  "0000000000000000000000000000000000000000000000000000000000000000#0": {
+    "address": "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp",
+    "datum": null,
+    "datumhash": null,
+    "inlineDatum": null,
+    "referenceScript": null,
+    "value": {
+      "lovelace": 100000000000
+    }
+  },
+  "0000000000000000000000000000000000000000000000000000000000000001#0": {
+    "address": "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp",
+    "datum": null,
+    "datumhash": null,
+    "inlineDatum": null,
+    "referenceScript": null,
+    "value": {
+      "lovelace": 50000000000
+    }
+  }
+}

@@ -67,7 +67,10 @@ class _BonusFeaturesShowcaseState extends State<BonusFeaturesShowcase>
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 8),
@@ -98,16 +101,22 @@ class _BonusFeaturesShowcaseState extends State<BonusFeaturesShowcase>
                           onPressed: () {
                             setState(() => _showConfetti = true);
                             Future.delayed(const Duration(seconds: 3), () {
-                              if (mounted) setState(() => _showConfetti = false);
+                              if (mounted)
+                                setState(() => _showConfetti = false);
                             });
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
+                              color: const Color(
+                                0xFFD4AF37,
+                              ).withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Text('🏰', style: TextStyle(fontSize: 24)),
+                            child: const Text(
+                              '🏰',
+                              style: TextStyle(fontSize: 24),
+                            ),
                           ),
                         ),
                       ],
@@ -129,7 +138,10 @@ class _BonusFeaturesShowcaseState extends State<BonusFeaturesShowcase>
                       ),
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.grey,
-                      labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      labelStyle: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                       tabs: const [
                         Tab(text: '😂 Memes'),
                         Tab(text: '✨ UI/UX'),
@@ -194,7 +206,9 @@ class _MemesTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF1a1a2e),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF0033AD).withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: const Color(0xFF0033AD).withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 children: [
@@ -202,7 +216,10 @@ class _MemesTab extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text(
                     'Tap 5 times to unlock Charles!',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '(Easter egg activated)',
@@ -233,25 +250,29 @@ class _MemesTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...CardanoMemes.royalQuotes.take(4).map((quote) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('👑', style: TextStyle(fontSize: 16)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              quote,
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontStyle: FontStyle.italic,
+                ...CardanoMemes.royalQuotes
+                    .take(4)
+                    .map(
+                      (quote) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('👑', style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                quote,
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    )),
+                    ),
               ],
             ),
           ),
@@ -266,7 +287,10 @@ class _MemesTab extends StatelessWidget {
             child: BouncyButton(
               onPressed: () => showWagmiSuccess(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF0033AD), Color(0xFF00D9FF)],
@@ -328,7 +352,10 @@ class _UIUXTabState extends State<_UIUXTab> {
                   SizedBox(height: 12),
                   Text(
                     'Animated Gradient Border',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -344,7 +371,10 @@ class _UIUXTabState extends State<_UIUXTab> {
                 SizedBox(height: 12),
                 Text(
                   'Glass Morphism Card',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -548,7 +578,9 @@ class _PrivacyTab extends StatelessWidget {
                         onPurchaseComplete: (purchase) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Private purchase complete! Commitment: ${purchase.commitment}'),
+                              content: Text(
+                                'Private purchase complete! Commitment: ${purchase.commitment}',
+                              ),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -557,7 +589,10 @@ class _PrivacyTab extends StatelessWidget {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF0033AD), Color(0xFF00D9FF)],
@@ -712,7 +747,10 @@ class _HydraTabState extends State<_HydraTab> {
                 child: BouncyButton(
                   onPressed: _demoRunning ? null : () => _runDemo(hydraService),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       gradient: _demoRunning
                           ? LinearGradient(

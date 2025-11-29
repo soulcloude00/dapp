@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
@@ -86,15 +87,22 @@ class HydraService extends ChangeNotifier {
 
   void _handleMessage(dynamic msg) {
     try {
-      // msg might be a JS object, need to convert to Dart map
-      // For simplicity, let's assume it's passed as JSON string or we can parse it
-      // If it's a JS object, we might need to use js_util to read properties
-
-      // Actually, let's assume the JS side passes a JSON string to avoid interop issues
-      // But if it passes an object, we can try to convert.
-
-      // For now, just logging
-      debugPrint('Hydra Message received in Dart');
+      // msg is passed as JSON string from JS to avoid interop issues
+      String msgStr = msg.toString();
+      final Map<String, dynamic> messageData = jsonDecode(msgStr);
+      
+      _messageHistory.add({
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        ...messageData,
+      });
+      
+      // Keep history manageable
+      if (_messageHistory.length > 100) {
+        _messageHistory.removeAt(0);
+      }
+      
+      notifyListeners();
+      debugPrint('Hydra Message: ${messageData['tag']}');
     } catch (e) {
       debugPrint('Error handling Hydra message: $e');
     }
@@ -155,6 +163,67 @@ class HydraService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error calling $methodName: $e');
       rethrow;
+    }
+  }
+
+  /// Submit a transaction to the Hydra Head (L2)
+  Future<void> submitTransaction(String txCborHex) async {
+    await _callClientMethod('newTx', [txCborHex]);
+  }
+
+  /// Commit UTxO to the Hydra Head
+  Future<void> commitUtxo(Map<String, dynamic> utxo) async {
+    if (!kIsWeb) return;
+    try {
+      final window = js.webWindow;
+      if (window == null) return;
+      if (js_util.hasProperty(window, 'hydraClient')) {
+        final client = js_util.getProperty(window, 'hydraClient');
+        final utxoJs = js_util.jsify(utxo);
+        final promise = js_util.callMethod(client, 'commit', [utxoJs]);
+        await js_util.promiseToFuture(promise);
+      }
+    } catch (e) {
+      debugPrint('Error committing UTxO: $e');
+      rethrow;
+    }
+  }
+
+  /// Get the current Head UTxO set
+  Future<List<Map<String, dynamic>>> getHeadUtxos() async {
+    // Parse from message history - look for SnapshotConfirmed messages
+    final snapshots = _messageHistory.where((msg) => msg['tag'] == 'SnapshotConfirmed').toList();
+    if (snapshots.isEmpty) return [];
+    
+    final latestSnapshot = snapshots.last;
+    if (latestSnapshot['snapshot'] != null && latestSnapshot['snapshot']['utxo'] != null) {
+      // This would need proper parsing based on actual Hydra response format
+      return [];
+    }
+    return [];
+  }
+
+  /// Clear message history
+  void clearHistory() {
+    _messageHistory.clear();
+    notifyListeners();
+  }
+
+  /// Disconnect from Hydra
+  Future<void> disconnect() async {
+    if (!kIsWeb) return;
+    try {
+      final window = js.webWindow;
+      if (window == null) return;
+      if (js_util.hasProperty(window, 'hydraClient')) {
+        final client = js_util.getProperty(window, 'hydraClient');
+        js_util.callMethod(client, 'disconnect', []);
+      }
+      _isConnected = false;
+      _status = HydraStatus.idle;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error disconnecting from Hydra: $e');
     }
   }
 }

@@ -47,7 +47,10 @@ class NotificationsPage extends StatelessWidget {
                         children: [
                           Icon(Icons.delete_sweep, size: 20, color: Colors.red),
                           SizedBox(width: 12),
-                          Text('Clear all', style: TextStyle(color: Colors.red)),
+                          Text(
+                            'Clear all',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ],
                       ),
                     ),
@@ -55,7 +58,8 @@ class NotificationsPage extends StatelessWidget {
                 ),
               IconButton(
                 icon: const Icon(Icons.settings),
-                onPressed: () => _showSettingsDialog(context, notificationService),
+                onPressed: () =>
+                    _showSettingsDialog(context, notificationService),
               ),
             ],
           ),
@@ -83,11 +87,7 @@ class NotificationsPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 80,
-            color: Colors.grey[700],
-          ),
+          Icon(Icons.notifications_none, size: 80, color: Colors.grey[700]),
           const SizedBox(height: 16),
           Text(
             'No Notifications',
@@ -206,18 +206,12 @@ class NotificationsPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       notification.message,
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 13),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _formatTimestamp(notification.timestamp),
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 11,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 11),
                     ),
                   ],
                 ),
@@ -278,7 +272,10 @@ class NotificationsPage extends StatelessWidget {
     }
   }
 
-  void _handleNotificationTap(BuildContext context, AppNotification notification) {
+  void _handleNotificationTap(
+    BuildContext context,
+    AppNotification notification,
+  ) {
     // Navigate based on notification type
     switch (notification.type) {
       case NotificationType.transaction:
@@ -328,10 +325,7 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  void _showSettingsDialog(
-    BuildContext context,
-    NotificationService service,
-  ) {
+  void _showSettingsDialog(BuildContext context, NotificationService service) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surfaceColor,
@@ -428,10 +422,7 @@ class NotificationsPage extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
@@ -439,7 +430,11 @@ class NotificationsPage extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryColor,
+            thumbColor: MaterialStateProperty.resolveWith(
+              (states) => states.contains(MaterialState.selected)
+                  ? AppTheme.primaryColor
+                  : null,
+            ),
           ),
         ],
       ),

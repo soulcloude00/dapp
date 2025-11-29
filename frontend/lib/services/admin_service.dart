@@ -389,8 +389,8 @@ class AdminService extends ChangeNotifier {
       }
       final bridge = js_util.getProperty(window, 'PropFiBridge');
 
-      // Create property object for JS
-      final propertyData = js.JsObject.jsify({
+      // Create property object for JS using js_util.jsify (compatible with globalThis)
+      final propertyData = js_util.jsify({
         'name': property.name,
         'description': property.description,
         'location': property.location,

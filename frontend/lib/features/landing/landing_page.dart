@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:propfi/theme/app_theme.dart';
 import 'package:propfi/services/wallet_service.dart';
+import 'package:propfi/services/hydra_trading_service.dart';
 import 'package:propfi/features/marketplace/marketplace_page.dart';
 import 'package:propfi/features/marketplace/widgets/property_card.dart';
 import 'package:propfi/features/notifications/notifications_page.dart';
 import 'package:propfi/features/analytics/analytics_page.dart';
 import 'package:propfi/features/bonus/bonus_showcase.dart';
+import 'package:propfi/features/hydra/hydra_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,6 +108,77 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Row(
                         children: [
+                          // Global Hydra L2 Status Indicator
+                          Consumer<HydraTradingService>(
+                            builder: (context, hydraService, _) {
+                              final isConnected = hydraService.isConnected;
+                              final isOpen = hydraService.isOpen;
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const HydraPage(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isOpen
+                                        ? Colors.green.withOpacity(0.2)
+                                        : isConnected
+                                            ? Colors.blue.withOpacity(0.2)
+                                            : Colors.grey.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isOpen
+                                          ? Colors.green
+                                          : isConnected
+                                              ? Colors.blue
+                                              : Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isOpen ? Icons.bolt : Icons.water_drop,
+                                        color: isOpen
+                                            ? Colors.green
+                                            : isConnected
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isOpen
+                                            ? 'L2'
+                                            : isConnected
+                                                ? 'L2'
+                                                : 'L2',
+                                        style: TextStyle(
+                                          color: isOpen
+                                              ? Colors.green
+                                              : isConnected
+                                                  ? Colors.blue
+                                                  : Colors.grey,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 4),
                           // Bonus Features button
                           IconButton(
                             onPressed: () {
@@ -360,6 +433,10 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // Hydra L2 Quick Status
+                  const HydraQuickStatus(),
                   const SizedBox(height: 32),
 
                   // Quick Actions
