@@ -14,3 +14,5 @@ class JsObject {
 }
 
 final webWindow = null;
+
+dynamic allowInterop<F extends Function>(F f) => f;

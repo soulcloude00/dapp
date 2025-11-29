@@ -3,5 +3,7 @@
 dynamic getProperty(dynamic o, String name) => null;
 bool hasProperty(dynamic o, String name) => false;
 dynamic callMethod(dynamic o, String method, List<dynamic> args) => null;
-Future<T> promiseToFuture<T>(dynamic promise) async => throw UnimplementedError('Not available on this platform');
+Future<T> promiseToFuture<T>(dynamic promise) async =>
+    throw UnimplementedError('Not available on this platform');
 dynamic jsify(dynamic object) => null;
+void setProperty(dynamic o, Object name, Object? value) {}

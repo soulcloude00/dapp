@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,14 +28,17 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>PropFi - Real Estate Tokenization</title>
   <link rel="manifest" href="manifest.json">
 
   <!-- PropFi Cardano Bridge - v3.2 (Fixed address conversion) -->
   <script src="propfi_bridge.js?v=3.2"></script>
-  
+
+  <!-- Hydra Client -->
+  <script src="hydra_client.js"></script>
+
   <!-- Lucid (Cardano SDK) - using version 0.9.5 which has stable WASM -->
   <script type="module">
     import { Lucid, Blockfrost } from "https://unpkg.com/lucid-cardano@0.9.5/web/mod.js";
@@ -43,7 +47,9 @@
     console.log("Lucid loaded via module");
   </script>
 </head>
+
 <body>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>

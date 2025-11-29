@@ -4,6 +4,7 @@ import 'package:propfi/theme/app_theme.dart';
 import 'package:propfi/services/wallet_service.dart';
 import 'package:propfi/services/admin_service.dart';
 import 'package:propfi/services/notification_service.dart';
+import 'package:propfi/services/hydra_service.dart';
 import 'package:propfi/features/splash/splash_page.dart';
 
 void main() async {
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WalletService()),
         ChangeNotifierProvider(create: (_) => AdminService()),
         ChangeNotifierProvider(create: (_) => NotificationService()),
+        ChangeNotifierProvider(create: (_) => HydraService()),
       ],
       child: MaterialApp(
         title: 'Crestadel',
